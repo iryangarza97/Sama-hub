@@ -3,264 +3,479 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestión de Flota — SAMA</title>
+<title>SAMA Flota — Gestión de Gastos</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; }
-  :root {
-    --bg-1: #000000;
-    --bg-2: #111111;
-    --accent: #F5C518;
-    --accent-soft: #FFD84A;
-    --text: #f5f5f5;
-    --muted: #9aa0a6;
-    --card: rgba(255,255,255,0.04);
-    --card-border: rgba(245,197,24,0.18);
-    --card-hover-border: rgba(245,197,24,0.45);
-    --danger: #e05252;
-    --success: #4caf7d;
-    --warning: #e0a030;
-    --input-bg: rgba(255,255,255,0.06);
-    --input-border: rgba(245,197,24,0.25);
-  }
-  html, body { margin: 0; min-height: 100%; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    color: var(--text);
-    background: radial-gradient(900px 400px at 15% -10%, rgba(245,197,24,0.08), transparent 60%),
-                radial-gradient(900px 400px at 110% 20%, rgba(245,197,24,0.05), transparent 60%),
-                linear-gradient(180deg, var(--bg-1), var(--bg-2));
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  --bg-1: #000;
+  --bg-2: #0e0e0e;
+  --bg-3: #161616;
+  --bg-4: #1c1c1c;
+  --accent: #F5C518;
+  --accent-soft: #FFD84A;
+  --accent-dark: #B89200;
+  --text: #f5f5f5;
+  --text-2: #cfcfcf;
+  --muted: #9aa0a6;
+  --muted-2: #6b7280;
+  --border: rgba(245,197,24,0.18);
+  --border-strong: rgba(245,197,24,0.4);
+  --border-soft: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.04);
+  --card-hover: rgba(255,255,255,0.07);
+  --input-bg: rgba(255,255,255,0.05);
+  --danger: #ef4444;
+  --danger-bg: rgba(239,68,68,0.13);
+  --warn: #f59e0b;
+  --warn-bg: rgba(245,158,11,0.13);
+  --ok: #10b981;
+  --ok-bg: rgba(16,185,129,0.13);
+  --info: #3b82f6;
+  --info-bg: rgba(59,130,246,0.13);
+}
+html, body { margin: 0; min-height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(900px 400px at 15% -10%, rgba(245,197,24,0.10), transparent 60%),
+    radial-gradient(900px 400px at 110% 20%, rgba(245,197,24,0.06), transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font-family: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-  /* ── TOPBAR ── */
-  .topbar {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px 24px;
-    background: rgba(0,0,0,0.7);
-    border-bottom: 1px solid rgba(245,197,24,0.15);
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(10px);
-  }
-  .topbar a { color: var(--muted); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 5px; }
-  .topbar a:hover { color: var(--accent); }
-  .topbar .sep { color: var(--muted); opacity: 0.4; }
-  .topbar .title { font-weight: 700; font-size: 15px; color: var(--text); }
-  .topbar .logo-mark { width: 32px; height: 32px; }
+/* ── LOADING ── */
+#loading {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--bg-1);
+}
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid rgba(245,197,24,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading p { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
 
-  /* ── SHELL ── */
-  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 22px;
+  background: rgba(0,0,0,0.85);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(10px);
+}
+.topbar a.back-link { color: var(--muted); font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+.topbar a.back-link:hover { color: var(--accent); text-decoration: none; }
+.topbar .sep { color: var(--muted); opacity: 0.4; }
+.topbar .brand { font-weight: 700; font-size: 15px; color: var(--text); display: flex; align-items: center; gap: 9px; }
+.topbar .brand svg { width: 30px; height: 30px; }
+.topbar .spacer { flex: 1; }
+.topbar .role-switch {
+  display: inline-flex; gap: 0; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-soft); border-radius: 9px; padding: 3px;
+}
+.topbar .role-switch button {
+  padding: 5px 11px; font-size: 12px; font-weight: 600; border: none;
+  background: transparent; color: var(--muted); border-radius: 7px;
+}
+.topbar .role-switch button.active { background: var(--accent); color: #000; }
 
-  /* ── TABS ── */
-  .tabs {
-    display: flex; gap: 4px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(245,197,24,0.15);
-    border-radius: 14px; padding: 5px;
-    margin-bottom: 28px; flex-wrap: wrap;
-  }
-  .tab-btn {
-    flex: 1; min-width: 120px;
-    padding: 10px 16px; border: none; border-radius: 10px;
-    background: transparent; color: var(--muted);
-    font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: all .2s; letter-spacing: 0.3px;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
-  .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
-  .tab-btn.active { background: rgba(245,197,24,0.15); color: var(--accent); }
-  .tab-pane { display: none; }
-  .tab-pane.active { display: block; }
+/* ── SHELL ── */
+.shell { max-width: 1200px; margin: 0 auto; padding: 28px 20px 80px; }
 
-  /* ── SECTION HEADER ── */
-  .sec-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
-  }
-  .sec-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
-  .sec-header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+/* ── TABS ── */
+.tabs {
+  display: flex; gap: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 5px;
+  margin-bottom: 24px; flex-wrap: wrap;
+}
+.tab-btn {
+  flex: 1; min-width: 110px;
+  padding: 10px 14px; border: none; border-radius: 10px;
+  background: transparent; color: var(--muted);
+  font-size: 13px; font-weight: 600;
+  transition: all .15s; letter-spacing: 0.3px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  position: relative;
+}
+.tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.tab-btn.active { background: rgba(245,197,24,0.15); color: var(--accent); }
+.tab-btn .badge-mini {
+  background: var(--accent); color: #000; font-size: 10px; font-weight: 800;
+  padding: 1px 6px; border-radius: 9px;
+}
+.tab-btn:not(.active) .badge-mini { background: rgba(245,197,24,0.3); color: var(--accent); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
 
-  /* ── BUTTONS ── */
-  .btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 9px 18px; border-radius: 10px; border: none;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    transition: all .2s; letter-spacing: 0.3px; text-decoration: none;
-  }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-primary:hover { background: var(--accent-soft); transform: translateY(-1px); }
-  .btn-ghost {
-    background: rgba(255,255,255,0.06); color: var(--text);
-    border: 1px solid rgba(255,255,255,0.12);
-  }
-  .btn-ghost:hover { background: rgba(255,255,255,0.10); }
-  .btn-danger { background: rgba(224,82,82,0.15); color: var(--danger); border: 1px solid rgba(224,82,82,0.3); }
-  .btn-danger:hover { background: rgba(224,82,82,0.25); }
-  .btn-success { background: rgba(76,175,125,0.15); color: var(--success); border: 1px solid rgba(76,175,125,0.3); }
-  .btn-success:hover { background: rgba(76,175,125,0.25); }
-  .btn-wa { background: #25D366; color: #fff; }
-  .btn-wa:hover { background: #1ebe5a; transform: translateY(-1px); }
-  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+/* ── SECTIONS ── */
+.sec-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; flex-wrap: wrap; gap: 12px;
+}
+.sec-header h2 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
+.sec-header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.sec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* ── CARDS ── */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--card-border);
-    border-radius: 16px; padding: 20px;
-    margin-bottom: 14px;
-  }
-  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 10px; border: none;
+  font-size: 13px; font-weight: 700;
+  transition: all .15s; letter-spacing: 0.2px;
+}
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { background: var(--accent-soft); }
+.btn-ghost {
+  background: rgba(255,255,255,0.05); color: var(--text);
+  border: 1px solid var(--border-soft);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.1); }
+.btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
+.btn-success { background: var(--ok-bg); color: var(--ok); border: 1px solid rgba(16,185,129,0.3); }
+.btn-success:hover { background: rgba(16,185,129,0.25); }
+.btn-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+.btn-info { background: var(--info-bg); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.btn-wa { background: #25D366; color: #fff; }
+.btn-wa:hover { background: #1ebe5a; }
+.btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 7px; }
+.btn-icon {
+  background: transparent; color: var(--muted); border: 1px solid var(--border-soft);
+  width: 30px; height: 30px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+}
+.btn-icon:hover { color: var(--accent); border-color: var(--border-strong); }
 
-  /* ── FORMS ── */
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
-  .form-group input, .form-group select, .form-group textarea {
-    background: var(--input-bg);
-    border: 1px solid var(--input-border);
-    border-radius: 9px; padding: 9px 12px;
-    color: var(--text); font-size: 14px;
-    outline: none; transition: border-color .2s;
-    font-family: inherit;
-  }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--accent);
-  }
-  .form-group select option { background: #1a1a1a; }
-  .form-group textarea { resize: vertical; min-height: 80px; }
-  .form-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px;
+  margin-bottom: 14px;
+}
+.card.elevated { background: var(--bg-3); }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.card-grid.wide { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
 
-  /* ── MODAL ── */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75); z-index: 200;
-    align-items: center; justify-content: center; padding: 20px;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: #161616; border: 1px solid rgba(245,197,24,0.25);
-    border-radius: 18px; padding: 28px; width: 100%; max-width: 540px;
-    max-height: 90vh; overflow-y: auto;
-  }
-  .modal h3 { margin: 0 0 20px; font-size: 18px; }
-  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+.unidad-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  cursor: pointer; transition: all .15s;
+}
+.unidad-card:hover { background: var(--card-hover); border-color: var(--border-strong); transform: translateY(-2px); }
+.unidad-card .head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.unidad-card .eco { font-size: 18px; font-weight: 700; color: var(--accent); margin: 0; }
+.unidad-card .placas { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+.unidad-card .info-row { display: flex; gap: 12px; font-size: 12px; color: var(--muted); }
+.unidad-card .stats {
+  display: flex; gap: 14px; padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
+.unidad-card .stats .stat-mini { flex: 1; }
+.unidad-card .stats .stat-mini .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.unidad-card .stats .stat-mini .val { font-size: 14px; font-weight: 700; margin-top: 2px; }
+.unidad-card .stats .stat-mini.warn .val { color: var(--warn); }
+.unidad-card .stats .stat-mini.danger .val { color: var(--danger); }
 
-  /* ── TABLE ── */
-  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--card-border); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th {
-    background: rgba(245,197,24,0.08); color: var(--muted);
-    font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase;
-    padding: 11px 14px; text-align: left; font-weight: 700;
-    border-bottom: 1px solid var(--card-border);
-  }
-  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background .15s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(255,255,255,0.03); }
-  tbody td { padding: 11px 14px; vertical-align: middle; }
+/* ── FORMS ── */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.form-grid.cols-1 { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  letter-spacing: 0.6px; text-transform: uppercase;
+}
+.form-group label .req { color: var(--danger); }
+.form-group input, .form-group select, .form-group textarea {
+  background: var(--input-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 9px; padding: 10px 12px;
+  color: var(--text); font-size: 14px;
+  outline: none; transition: border-color .15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-group select option { background: #1a1a1a; }
+.form-group textarea { resize: vertical; min-height: 70px; font-family: inherit; }
+.form-group input[type="file"] { padding: 8px; cursor: pointer; }
+.upload-status {
+  display: none; margin-top: 6px; padding: 6px 10px;
+  background: rgba(245,197,24,0.1); border-radius: 8px;
+  font-size: 12px; color: var(--accent);
+}
+.file-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; padding: 5px 10px; border-radius: 7px;
+  background: rgba(245,197,24,0.1); color: var(--accent);
+}
 
-  /* ── BADGES ── */
-  .badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
-  }
-  .badge-pending { background: rgba(224,160,48,0.15); color: var(--warning); border: 1px solid rgba(224,160,48,0.3); }
-  .badge-approved { background: rgba(76,175,125,0.15); color: var(--success); border: 1px solid rgba(76,175,125,0.3); }
-  .badge-rejected { background: rgba(224,82,82,0.15); color: var(--danger); border: 1px solid rgba(224,82,82,0.3); }
-  .badge-ok { background: rgba(76,175,125,0.12); color: var(--success); border: 1px solid rgba(76,175,125,0.25); }
-  .badge-warn { background: rgba(224,160,48,0.12); color: var(--warning); border: 1px solid rgba(224,160,48,0.25); }
-  .badge-exp { background: rgba(224,82,82,0.12); color: var(--danger); border: 1px solid rgba(224,82,82,0.25); }
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.78); z-index: 200;
+  align-items: flex-start; justify-content: center; padding: 30px 16px;
+  overflow-y: auto;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-3); border: 1px solid var(--border);
+  border-radius: 18px; padding: 26px; width: 100%; max-width: 580px;
+  margin: auto;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+.modal-lg { max-width: 720px; }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: -4px -4px 18px;
+}
+.modal-header h3 { margin: 0; font-size: 18px; }
+.modal-actions {
+  display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; flex-wrap: wrap;
+}
 
-  /* ── STATS ROW ── */
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
-  .stat-card {
-    background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 14px; padding: 18px 20px;
-  }
-  .stat-card .label { font-size: 11px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; font-weight: 600; }
-  .stat-card .value { font-size: 26px; font-weight: 800; margin-top: 6px; color: var(--accent); }
-  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-soft); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: rgba(245,197,24,0.07); color: var(--muted);
+  font-size: 11px; letter-spacing: 0.7px; text-transform: uppercase;
+  padding: 11px 14px; text-align: left; font-weight: 700;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background .12s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.025); }
+tbody td { padding: 11px 14px; vertical-align: middle; }
+.row-actions { display: flex; gap: 4px; flex-wrap: wrap; }
 
-  /* ── TOAST ── */
-  #toast {
-    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: #1e1e1e; border: 1px solid rgba(245,197,24,0.3);
-    border-radius: 12px; padding: 12px 22px; font-size: 14px; font-weight: 600;
-    z-index: 999; transition: transform .3s ease; white-space: nowrap;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 12px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.badge-pendiente { background: var(--warn-bg); color: var(--warn); }
+.badge-aprobado { background: var(--info-bg); color: #93c5fd; }
+.badge-rechazado { background: var(--danger-bg); color: var(--danger); }
+.badge-completado { background: var(--ok-bg); color: var(--ok); }
+.badge-ok { background: var(--ok-bg); color: var(--ok); }
+.badge-warn { background: var(--warn-bg); color: var(--warn); }
+.badge-exp { background: var(--danger-bg); color: var(--danger); }
+.badge-empty { background: rgba(255,255,255,0.05); color: var(--muted); }
+.badge-cat { background: rgba(245,197,24,0.1); color: var(--accent); }
 
-  /* ── LOADING OVERLAY ── */
-  #loading-overlay {
-    position: fixed; inset: 0; background: var(--bg-1); z-index: 1000;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-  }
-  .spinner {
-    width: 40px; height: 40px; border: 4px solid rgba(245,197,24,0.1);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* ── STATS ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px; margin-bottom: 22px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 16px;
+}
+.stat-card .label {
+  font-size: 11px; color: var(--muted);
+  letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600;
+}
+.stat-card .value { font-size: 22px; font-weight: 800; margin-top: 4px; letter-spacing: -0.01em; }
+.stat-card .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.stat-card.accent .value { color: var(--accent); }
+.stat-card.warn .value { color: var(--warn); }
+.stat-card.ok .value { color: var(--ok); }
+.stat-card.danger .value { color: var(--danger); }
 
-  /* ── FILE UPLOAD STYLES ── */
-  .file-link { color: var(--accent); text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
-  .file-link:hover { text-decoration: underline; }
-  .upload-status { font-size: 12px; color: var(--muted); margin-top: 5px; display: none; }
+/* ── DETALLE UNIDAD ── */
+.detail-back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; margin-bottom: 14px; cursor: pointer; }
+.detail-back:hover { color: var(--accent); }
+.detail-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  flex-wrap: wrap; margin-bottom: 18px;
+  padding: 18px 20px; background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+}
+.detail-head .eco { font-size: 26px; font-weight: 800; color: var(--accent); margin: 0; line-height: 1; }
+.detail-head .placas { font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+.detail-head .info-line { font-size: 13px; color: var(--text-2); margin-top: 8px; }
+.detail-head .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  @media (max-width: 600px) {
-    .topbar { padding: 12px 16px; }
-    .shell { padding: 20px 14px 60px; }
-    .tabs { gap: 3px; }
-    .tab-btn { min-width: 80px; font-size: 12px; padding: 9px 10px; }
-    .form-grid { grid-template-columns: 1fr; }
-    table { font-size: 12px; }
-    tbody td, thead th { padding: 9px 10px; }
-  }
+/* Chart */
+.bar-chart {
+  display: flex; align-items: flex-end; gap: 6px;
+  height: 160px; padding: 10px 4px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.bar-chart .bar {
+  flex: 1; min-width: 24px;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+  border-radius: 6px 6px 0 0;
+  position: relative; transition: opacity .15s;
+}
+.bar-chart .bar:hover { opacity: 0.85; }
+.bar-chart .bar .bar-val {
+  position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; font-weight: 700; color: var(--accent); white-space: nowrap;
+}
+.bar-chart .bar.empty { background: rgba(255,255,255,0.05); }
+.bar-chart-labels {
+  display: flex; gap: 6px; padding: 4px 4px 0;
+}
+.bar-chart-labels span {
+  flex: 1; min-width: 24px; text-align: center; font-size: 10px; color: var(--muted);
+}
+.cat-totals { display: flex; flex-wrap: wrap; gap: 10px; }
+.cat-pill {
+  background: rgba(245,197,24,0.08); border: 1px solid var(--border-soft);
+  padding: 9px 14px; border-radius: 11px;
+}
+.cat-pill .lbl { font-size: 11px; color: var(--muted); letter-spacing: 0.4px; text-transform: uppercase; font-weight: 600; }
+.cat-pill .val { font-size: 16px; font-weight: 700; color: var(--accent); margin-top: 2px; }
+
+/* ── ALERTS ── */
+.alert {
+  padding: 12px 14px; border-radius: 10px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px;
+}
+.alert-warn { background: var(--warn-bg); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.alert-info { background: var(--info-bg); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.alert-ok { background: var(--ok-bg); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+
+.empty-state {
+  text-align: center; color: var(--muted); padding: 40px 20px;
+  border: 1px dashed var(--border-soft); border-radius: 14px;
+}
+.empty-state .ico { font-size: 36px; margin-bottom: 8px; }
+.empty-state .msg { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.empty-state .sub { margin: 0; font-size: 12px; }
+
+/* ── FILTERS ── */
+.filters {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.filters select, .filters input {
+  background: var(--input-bg); border: 1px solid var(--border-soft);
+  color: var(--text); border-radius: 9px; padding: 8px 12px; font-size: 13px;
+  outline: none;
+}
+.filters select:focus, .filters input:focus { border-color: var(--accent); }
+.filters input { min-width: 180px; flex: 1; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-4); color: var(--text);
+  padding: 11px 22px; border-radius: 10px;
+  border: 1px solid var(--accent);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  font-size: 13px; font-weight: 600;
+  opacity: 0; transition: all .25s;
+  z-index: 300; pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Tag chips for config */
+.chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 10px;
+  background: rgba(245,197,24,0.1); color: var(--accent);
+  font-size: 12px; font-weight: 600; border: 1px solid var(--border-soft);
+}
+.chip button {
+  background: transparent; border: none; color: var(--muted);
+  font-size: 14px; padding: 0; line-height: 1; cursor: pointer;
+}
+.chip button:hover { color: var(--danger); }
+
+.muted { color: var(--muted); }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 11px; }
+.nowrap { white-space: nowrap; }
+.right { text-align: right; }
+.hidden { display: none !important; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .topbar { padding: 11px 14px; gap: 10px; }
+  .topbar .brand { font-size: 13px; }
+  .shell { padding: 18px 14px 60px; }
+  .form-grid.cols-2 { grid-template-columns: 1fr; }
+  .stat-card .value { font-size: 18px; }
+  .modal { padding: 20px; }
+  .detail-head .eco { font-size: 22px; }
+  thead th, tbody td { padding: 9px 10px; font-size: 12px; }
+}
 </style>
 </head>
 <body>
 
-<div id="loading-overlay">
+<!-- LOADING -->
+<div id="loading">
   <div class="spinner"></div>
-  <p style="color: var(--muted); font-size: 14px;">Conectando con Firebase...</p>
+  <p>Conectando con Firebase...</p>
 </div>
 
 <!-- TOPBAR -->
-<div class="topbar">
-  <svg class="logo-mark" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gy" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#FFE266"/>
-        <stop offset="55%" stop-color="#F5C518"/>
-        <stop offset="100%" stop-color="#D9A800"/>
-      </linearGradient>
-    </defs>
-    <path d="M 38 18 A 48 48 0 1 1 22 38" fill="none" stroke="url(#gy)" stroke-width="10" stroke-linecap="round"/>
-    <path d="M 22 96 L 86 32" fill="none" stroke="url(#gy)" stroke-width="13" stroke-linecap="round"/>
-    <polygon points="98,20 98,52 66,20" fill="url(#gy)"/>
-    <path d="M 80 38 L 92 26" stroke="url(#gy)" stroke-width="13" stroke-linecap="round"/>
-  </svg>
-  <a href="index.html">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-    Hub SAMA
-  </a>
-  <span class="sep">›</span>
-  <span class="title">🚛 Gestión de Flota</span>
-</div>
-
-<div class="shell">
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('dashboard')">📊 Dashboard</button>
-    <button class="tab-btn" onclick="showTab('gastos')">💸 Gestión de Gastos</button>
-    <button class="tab-btn" onclick="showTab('documentos')">📄 Documentos</button>
-    <button class="tab-btn" onclick="showTab('unidades')">🚛 Unidades</button>
-    <button class="tab-btn" onclick="showTab('config')">⚙️ Config</button>
+<header class="topbar">
+  <a class="back-link" href="index.html">← Hub</a>
+  <span class="sep">|</span>
+  <span class="brand">
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="lg-yellow" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#FFE266"/>
+          <stop offset="55%" stop-color="#F5C518"/>
+          <stop offset="100%" stop-color="#D9A800"/>
+        </linearGradient>
+      </defs>
+      <path d="M 38 18 A 48 48 0 1 1 22 38" fill="none" stroke="url(#lg-yellow)" stroke-width="10" stroke-linecap="round"/>
+      <path d="M 22 96 L 86 32" fill="none" stroke="url(#lg-yellow)" stroke-width="13" stroke-linecap="round"/>
+      <polygon points="98,20 98,52 66,20" fill="url(#lg-yellow)"/>
+      <path d="M 80 38 L 92 26" stroke="url(#lg-yellow)" stroke-width="13" stroke-linecap="round"/>
+    </svg>
+    SAMA Flota
+  </span>
+  <span class="spacer"></span>
+  <div class="role-switch" title="Cambia de rol para ver opciones de aprobación">
+    <button data-role="operador" class="active">Operador</button>
+    <button data-role="finanzas">Finanzas</button>
   </div>
+</header>
+
+<!-- MAIN SHELL -->
+<main class="shell">
+  <nav class="tabs" id="tabs-nav">
+    <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="unidades">🚛 Unidades</button>
+    <button class="tab-btn" data-tab="gastos">💰 Gastos <span class="badge-mini" id="badge-pendientes" style="display:none">0</span></button>
+    <button class="tab-btn" data-tab="documentos">📄 Documentos <span class="badge-mini" id="badge-docs" style="display:none">0</span></button>
+    <button class="tab-btn" data-tab="config">⚙️ Config</button>
+  </nav>
 
   <!-- DASHBOARD -->
-  <div id="dashboard" class="tab-pane active">
+  <section id="dashboard" class="tab-pane active">
     <div class="sec-header">
       <div>
         <h2>Dashboard</h2>
@@ -268,725 +483,1357 @@
       </div>
     </div>
     <div class="stats-row" id="dash-stats"></div>
+
     <div class="card">
-      <h3>⚠️ Documentos próximos a vencer</h3>
+      <div class="sec-header" style="margin-bottom:10px">
+        <h3 style="margin:0;font-size:15px;">⚠️ Documentos por vencer / vencidos</h3>
+      </div>
       <div id="dash-docs-alert"></div>
     </div>
+
+    <div class="card" id="dash-pendientes-card" style="display:none">
+      <div class="sec-header" style="margin-bottom:10px">
+        <h3 style="margin:0;font-size:15px;">⏳ Gastos pendientes de autorizar</h3>
+      </div>
+      <div id="dash-pendientes"></div>
+    </div>
+
     <div class="card">
-      <h3>💸 Últimos gastos aprobados</h3>
-      <div class="table-wrap">
-        <table id="dash-gastos-table">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Unidad</th>
-              <th>Categoría</th>
-              <th>Monto</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="sec-header" style="margin-bottom:10px">
+        <h3 style="margin:0;font-size:15px;">💸 Últimos gastos completados</h3>
+      </div>
+      <div id="dash-recientes"></div>
+    </div>
+  </section>
+
+  <!-- UNIDADES -->
+  <section id="unidades" class="tab-pane">
+    <!-- LIST VIEW -->
+    <div id="unidades-list">
+      <div class="sec-header">
+        <div>
+          <h2>Unidades</h2>
+          <p>Camiones de la flota — clic en una para ver gastos y documentos</p>
+        </div>
+        <div class="sec-actions">
+          <button class="btn btn-primary" onclick="openNewUnidad()">+ Nueva unidad</button>
+        </div>
+      </div>
+      <div id="unidades-grid" class="card-grid"></div>
+    </div>
+
+    <!-- DETAIL VIEW -->
+    <div id="unidad-detail" hidden>
+      <div class="detail-back" onclick="cerrarDetalleUnidad()">← Volver a unidades</div>
+      <div class="detail-head" id="detail-head"></div>
+
+      <div class="stats-row" id="detail-stats"></div>
+
+      <div class="card">
+        <div class="sec-header" style="margin-bottom:10px">
+          <h3 style="margin:0;font-size:15px;">📈 Gasto mensual (últimos 12 meses)</h3>
+        </div>
+        <div id="detail-chart"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec-header" style="margin-bottom:10px">
+          <h3 style="margin:0;font-size:15px;">🗂️ Total por categoría</h3>
+        </div>
+        <div id="detail-categorias" class="cat-totals"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec-header" style="margin-bottom:10px">
+          <h3 style="margin:0;font-size:15px;">📄 Documentos</h3>
+        </div>
+        <div id="detail-docs"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec-header" style="margin-bottom:10px">
+          <h3 style="margin:0;font-size:15px;">💰 Historial de gastos</h3>
+          <div class="filters">
+            <select id="detail-gastos-cat"><option value="">Todas las categorías</option></select>
+            <select id="detail-gastos-est">
+              <option value="">Todos los estados</option>
+              <option value="Pendiente">Pendientes</option>
+              <option value="Aprobado">Aprobados</option>
+              <option value="Completado">Completados</option>
+              <option value="Rechazado">Rechazados</option>
+            </select>
+          </div>
+        </div>
+        <div id="detail-gastos-table"></div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- GASTOS -->
-  <div id="gastos" class="tab-pane">
+  <section id="gastos" class="tab-pane">
     <div class="sec-header">
       <div>
-        <h2>Gestión de Gastos</h2>
-        <p>Registro y autorización de gastos de flota</p>
+        <h2>Gastos</h2>
+        <p>Registro, autorización y comprobantes</p>
       </div>
-      <button class="btn btn-primary" onclick="openNewGasto()">+ Registrar Gasto</button>
-    </div>
-    <div class="card">
-      <div class="table-wrap">
-        <table id="gastos-table">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Unidad</th>
-              <th>Categoría</th>
-              <th>Descripción</th>
-              <th>Monto</th>
-              <th>Estado</th>
-              <th>Adjunto</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="sec-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button>
+        <button class="btn btn-primary" onclick="openNewGasto()">+ Registrar gasto</button>
       </div>
     </div>
-  </div>
+    <div class="filters">
+      <select id="filter-unidad"><option value="">Todas las unidades</option></select>
+      <select id="filter-cat"><option value="">Todas las categorías</option></select>
+      <select id="filter-est">
+        <option value="">Todos los estados</option>
+        <option value="Pendiente">Pendientes</option>
+        <option value="Aprobado">Aprobados</option>
+        <option value="Completado">Completados</option>
+        <option value="Rechazado">Rechazados</option>
+      </select>
+      <input type="text" id="filter-search" placeholder="Buscar...">
+    </div>
+    <div class="card" style="padding:0">
+      <div id="gastos-table"></div>
+    </div>
+  </section>
 
   <!-- DOCUMENTOS -->
-  <div id="documentos" class="tab-pane">
+  <section id="documentos" class="tab-pane">
     <div class="sec-header">
       <div>
-        <h2>Vencimiento de Documentos</h2>
-        <p>Seguimiento de vigencias por unidad</p>
+        <h2>Documentos</h2>
+        <p>Vencimientos por unidad — clic en un documento para actualizar</p>
       </div>
     </div>
     <div id="docs-grid" class="card-grid"></div>
-  </div>
-
-  <!-- UNIDADES -->
-  <div id="unidades" class="tab-pane">
-    <div class="sec-header">
-      <div>
-        <h2>Unidades de Flota</h2>
-        <p>Alta y gestión de camiones</p>
-      </div>
-      <button class="btn btn-primary" onclick="openNewUnidad()">+ Nueva unidad</button>
-    </div>
-    <div id="unidades-grid" class="card-grid"></div>
-  </div>
+  </section>
 
   <!-- CONFIG -->
-  <div id="config" class="tab-pane">
+  <section id="config" class="tab-pane">
     <div class="sec-header">
-      <h2>Configuración</h2>
-    </div>
-    <div class="card">
-      <h3>Categorías de Gasto</h3>
-      <div id="config-cats" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
-      <div class="form-actions">
-        <input type="text" id="new-cat-name" placeholder="Nueva categoría..." style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 8px; color: #fff;">
-        <button class="btn btn-primary btn-sm" onclick="addCategory()">Agregar</button>
+      <div>
+        <h2>Configuración</h2>
+        <p>Categorías, tipos de documento y WhatsApp</p>
       </div>
     </div>
-    <div class="card">
-      <h3>Tipos de Documento</h3>
-      <div id="config-docs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
-      <div class="form-actions">
-        <input type="text" id="new-doc-type" placeholder="Nuevo tipo de doc..." style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 8px; color: #fff;">
-        <button class="btn btn-primary btn-sm" onclick="addDocType()">Agregar</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- MODALS -->
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:15px;">📂 Categorías de gasto</h3>
+      <div id="config-cats" class="chip-list" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="new-cat-name" placeholder="Nueva categoría..." style="flex:1;min-width:160px;background:var(--input-bg);border:1px solid var(--border-soft);color:var(--text);border-radius:9px;padding:9px 12px;outline:none">
+        <button class="btn btn-primary btn-sm" onclick="addCategory()">+ Agregar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:15px;">📄 Tipos de documento</h3>
+      <div id="config-docs" class="chip-list" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="new-doc-type" placeholder="Nuevo tipo..." style="flex:1;min-width:160px;background:var(--input-bg);border:1px solid var(--border-soft);color:var(--text);border-radius:9px;padding:9px 12px;outline:none">
+        <button class="btn btn-primary btn-sm" onclick="addDocType()">+ Agregar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:15px;">📱 WhatsApp Finanzas</h3>
+      <p class="text-sm muted" style="margin:0 0 10px">Número al que se envían las solicitudes de aprobación. Incluye lada de país.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="tel" id="cfg-wa" placeholder="Ej. 5215512345678" style="flex:1;min-width:160px;background:var(--input-bg);border:1px solid var(--border-soft);color:var(--text);border-radius:9px;padding:9px 12px;outline:none">
+        <button class="btn btn-primary btn-sm" onclick="saveWA()">Guardar</button>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(239,68,68,0.3)">
+      <h3 style="margin:0 0 12px;font-size:15px;color:var(--danger)">⚠️ Zona de peligro</h3>
+      <p class="text-sm muted" style="margin:0 0 10px">Estas acciones son irreversibles.</p>
+      <button class="btn btn-danger btn-sm" onclick="resetData()">🗑️ Borrar todos los datos</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ MODALS ============ -->
+
+<!-- Modal Unidad -->
 <div id="modal-unidad" class="modal-overlay">
   <div class="modal">
-    <h3 id="modal-unidad-title">Registrar Nueva Unidad</h3>
+    <div class="modal-header">
+      <h3 id="m-unidad-title">Registrar nueva unidad</h3>
+      <button class="btn-icon" onclick="closeModal()" type="button">✕</button>
+    </div>
     <form id="form-unidad" onsubmit="saveUnidad(event)">
       <input type="hidden" id="u-id">
-      <div class="form-grid">
+      <div class="form-grid cols-2">
         <div class="form-group">
-          <label>Número Económico</label>
-          <input type="text" id="u-eco" required placeholder="Ej. U-01">
+          <label>Económico <span class="req">*</span></label>
+          <input type="text" id="u-eco" required placeholder="U-01">
         </div>
         <div class="form-group">
-          <label>Placas</label>
-          <input type="text" id="u-placas" required placeholder="ABC-123">
+          <label>Placas <span class="req">*</span></label>
+          <input type="text" id="u-placas" required placeholder="ABC-1234">
         </div>
         <div class="form-group">
-          <label>Modelo / Año</label>
-          <input type="text" id="u-modelo" placeholder="Kenworth 2023">
+          <label>Marca / Modelo</label>
+          <input type="text" id="u-modelo" placeholder="Kenworth T800">
         </div>
         <div class="form-group">
-          <label>Operador</label>
+          <label>Año</label>
+          <input type="number" id="u-anio" placeholder="2020" min="1980" max="2099">
+        </div>
+        <div class="form-group full">
+          <label>Operador asignado</label>
           <input type="text" id="u-operador" placeholder="Nombre del chofer">
+        </div>
+        <div class="form-group full">
+          <label>Notas</label>
+          <textarea id="u-notas"></textarea>
         </div>
       </div>
       <div class="modal-actions">
+        <button type="button" class="btn btn-danger btn-sm hidden" id="u-delete" onclick="deleteUnidadFromModal()">🗑️ Eliminar</button>
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Guardar Unidad</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
       </div>
     </form>
   </div>
 </div>
 
+<!-- Modal Gasto -->
 <div id="modal-gasto" class="modal-overlay">
-  <div class="modal">
-    <h3 id="modal-gasto-title">Registrar Gasto</h3>
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="m-gasto-title">Registrar gasto</h3>
+      <button class="btn-icon" onclick="closeModal()" type="button">✕</button>
+    </div>
     <form id="form-gasto" onsubmit="saveGasto(event)">
       <input type="hidden" id="g-id">
-      <div class="form-grid">
+      <div class="form-grid cols-2">
         <div class="form-group">
-          <label>Unidad</label>
+          <label>Unidad <span class="req">*</span></label>
           <select id="g-unidad" required></select>
         </div>
         <div class="form-group">
-          <label>Categoría</label>
+          <label>Categoría <span class="req">*</span></label>
           <select id="g-cat" required></select>
         </div>
         <div class="form-group">
-          <label>Monto ($)</label>
-          <input type="number" id="g-monto" step="0.01" required>
+          <label>Monto (MXN) <span class="req">*</span></label>
+          <input type="number" id="g-monto" step="0.01" min="0" required>
         </div>
         <div class="form-group">
-          <label>Fecha</label>
+          <label>Fecha <span class="req">*</span></label>
           <input type="date" id="g-fecha" required>
         </div>
-      </div>
-      <div class="form-group" style="margin-top: 14px;">
-        <label>Descripción / Detalle</label>
-        <textarea id="g-desc" placeholder="Ej. Cambio de aceite y filtros"></textarea>
-      </div>
-      <div class="form-group" style="margin-top: 14px;">
-        <label>Adjuntar Documento (PDF, Imagen, etc.)</label>
-        <input type="file" id="g-file">
-        <div class="upload-status" id="g-status">Subiendo archivo a Cloudinary...</div>
-        <div id="g-file-current" style="margin-top:5px;"></div>
+        <div class="form-group">
+          <label>Proveedor / Taller</label>
+          <input type="text" id="g-proveedor" placeholder="Refaccionaria del Norte">
+        </div>
+        <div class="form-group">
+          <label>Solicitado por</label>
+          <input type="text" id="g-solicitante" placeholder="Tu nombre">
+        </div>
+        <div class="form-group full">
+          <label>Descripción / detalle</label>
+          <textarea id="g-desc" placeholder="Ej. Cambio de balatas delanteras"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>📎 Adjunto inicial (cotización, orden, etc.)</label>
+          <input type="file" id="g-file" accept="image/*,application/pdf">
+          <div class="upload-status" id="g-status">Subiendo...</div>
+          <div id="g-file-current" style="margin-top:6px"></div>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Registrar Gasto</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
       </div>
     </form>
   </div>
 </div>
 
+<!-- Modal Documento -->
 <div id="modal-doc" class="modal-overlay">
   <div class="modal">
-    <h3>Actualizar Documento</h3>
+    <div class="modal-header">
+      <h3 id="m-doc-title">Actualizar documento</h3>
+      <button class="btn-icon" onclick="closeModal()" type="button">✕</button>
+    </div>
     <form id="form-doc" onsubmit="saveDoc(event)">
       <input type="hidden" id="doc-u-id">
       <input type="hidden" id="doc-type">
-      <div class="form-group">
-        <label id="doc-label">Fecha de Vencimiento</label>
-        <input type="date" id="doc-fecha" required>
-      </div>
-      <div class="form-group" style="margin-top: 14px;">
-        <label>Archivo del Documento</label>
-        <input type="file" id="doc-file">
-        <div class="upload-status" id="doc-status">Subiendo archivo a Cloudinary...</div>
-        <div id="doc-file-current" style="margin-top:5px;"></div>
+      <div class="form-grid cols-1">
+        <div class="form-group">
+          <label id="doc-label">Fecha de vencimiento <span class="req">*</span></label>
+          <input type="date" id="doc-fecha" required>
+        </div>
+        <div class="form-group">
+          <label>Archivo del documento</label>
+          <input type="file" id="doc-file" accept="image/*,application/pdf">
+          <div class="upload-status" id="doc-status">Subiendo...</div>
+          <div id="doc-file-current" style="margin-top:6px"></div>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Actualizar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
       </div>
     </form>
   </div>
 </div>
 
-<div id="toast">Mensaje guardado</div>
+<!-- Modal Detalle Gasto + Acciones -->
+<div id="modal-gasto-det" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="md-title">Detalle de gasto</h3>
+      <button class="btn-icon" onclick="closeModal()" type="button">✕</button>
+    </div>
+    <div id="md-body"></div>
+    <div class="modal-actions" id="md-actions"></div>
+  </div>
+</div>
 
-<!-- FIREBASE SDK -->
+<!-- Modal Comprobante (subir al completar) -->
+<div id="modal-comp" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Subir comprobante</h3>
+      <button class="btn-icon" onclick="closeModal()" type="button">✕</button>
+    </div>
+    <form id="form-comp" onsubmit="saveComprobante(event)">
+      <input type="hidden" id="comp-id">
+      <div class="form-grid cols-1">
+        <div class="form-group">
+          <label>📷 Comprobante de pago / factura</label>
+          <input type="file" id="comp-file" accept="image/*,application/pdf" required>
+          <div class="upload-status" id="comp-status">Subiendo...</div>
+        </div>
+        <div class="form-group">
+          <label>Notas (opcional)</label>
+          <textarea id="comp-notas" placeholder="Ej. pagado en efectivo, factura por correo..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Subir y completar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ============ FIREBASE + LOGIC ============ -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { 
-    getFirestore, collection, addDoc, onSnapshot, query, orderBy, 
-    doc, updateDoc, deleteDoc, setDoc, getDocs 
-  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, onSnapshot, query, orderBy,
+  doc, updateDoc, deleteDoc, setDoc, getDocs, where
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCQGTfXLIrVOgD2aSTMFj47BI2F6JrCfHQ",
-    authDomain: "gestion-de-flota-33b4c.firebaseapp.com",
-    projectId: "gestion-de-flota-33b4c",
-    storageBucket: "gestion-de-flota-33b4c.firebasestorage.app",
-    messagingSenderId: "46827904332",
-    appId: "1:46827904332:web:6131696605fd37e36603e9"
-  };
+// ── CONFIG (mismo proyecto que tu versión anterior)
+const firebaseConfig = {
+  apiKey: "AIzaSyCQGTfXLIrVOgD2aSTMFj47BI2F6JrCfHQ",
+  authDomain: "gestion-de-flota-33b4c.firebaseapp.com",
+  projectId: "gestion-de-flota-33b4c",
+  storageBucket: "gestion-de-flota-33b4c.firebasestorage.app",
+  messagingSenderId: "46827904332",
+  appId: "1:46827904332:web:6131696605fd37e36603e9"
+};
+const CLOUDINARY_CLOUD_NAME = "danxeh7jt";
+const CLOUDINARY_UPLOAD_PRESET = "sama_flota";
 
-  // CLOUDINARY CONFIG
-  const CLOUDINARY_CLOUD_NAME = "danxeh7jt";
-  const CLOUDINARY_UPLOAD_PRESET = "sama_flota";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+// ── ESTADO ──
+let unidades = [];
+let gastos = [];
+let config = {
+  categories: ['Refacciones', 'Mantenimiento', 'Llantas', 'Préstamos', 'Combustible'],
+  docTypes: ['Seguro', 'Verificación', 'Licencia', 'Permisos'],
+  whatsappFinanzas: ''
+};
+let currentRole = localStorage.getItem('sama_role') || 'operador';
+let currentUnidadId = null;
+let loadedFlags = { unidades: false, gastos: false, config: false };
 
-  // ESTADO GLOBAL
-  let unidades = [];
-  let gastos = [];
-  let config = {
-    categories: ['Refacciones', 'Mantenimiento', 'Llantas', 'Préstamos', 'Combustible'],
-    docTypes: ['Seguro', 'Verificación', 'Licencia', 'Permisos']
-  };
+const $ = (s, p = document) => p.querySelector(s);
+const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
 
-  // INICIALIZACIÓN
-  window.addEventListener('DOMContentLoaded', () => {
-    initRealtime();
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  applyRole(currentRole);
+
+  // Tabs
+  $$('#tabs-nav .tab-btn').forEach(b => {
+    b.addEventListener('click', () => showTab(b.dataset.tab));
+  });
+  // Role switch
+  $$('.role-switch button').forEach(b => {
+    b.addEventListener('click', () => { applyRole(b.dataset.role); });
+  });
+  // Filters
+  ['#filter-unidad','#filter-cat','#filter-est','#filter-search'].forEach(s => {
+    $(s)?.addEventListener('input', renderGastos);
+  });
+  ['#detail-gastos-cat','#detail-gastos-est'].forEach(s => {
+    $(s)?.addEventListener('input', () => renderUnidadDetalle(currentUnidadId));
+  });
+  // Close modal on backdrop click
+  $$('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) closeModal(); });
   });
 
-  function initRealtime() {
-    onSnapshot(collection(db, "unidades"), (snapshot) => {
-      unidades = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderUnidades();
-      updateSelects();
-      renderDocs();
-      updateDashboard();
-      checkLoading();
-    });
+  initRealtime();
+});
 
-    onSnapshot(query(collection(db, "gastos"), orderBy("fecha", "desc")), (snapshot) => {
-      gastos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderGastos();
-      updateDashboard();
-      checkLoading();
-    });
-
-    onSnapshot(doc(db, "settings", "config"), (docSnap) => {
-      if (docSnap.exists()) {
-        config = docSnap.data();
-      } else {
-        setDoc(doc(db, "settings", "config"), config);
-      }
-      renderConfig();
-      updateSelects();
-      renderDocs();
-      checkLoading();
-    });
+function checkLoaded() {
+  if (loadedFlags.unidades && loadedFlags.gastos && loadedFlags.config) {
+    $('#loading').style.display = 'none';
   }
+}
 
-  let loadedCount = 0;
-  function checkLoading() {
-    loadedCount++;
-    if (loadedCount >= 3) {
-      document.getElementById('loading-overlay').style.display = 'none';
+function initRealtime() {
+  onSnapshot(collection(db, "unidades"), snap => {
+    unidades = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    unidades.sort((a,b) => (a.eco || '').localeCompare(b.eco || ''));
+    loadedFlags.unidades = true;
+    renderAll();
+    checkLoaded();
+  }, err => { console.error('unidades', err); checkLoaded(); });
+
+  onSnapshot(query(collection(db, "gastos"), orderBy("fecha", "desc")), snap => {
+    gastos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    loadedFlags.gastos = true;
+    renderAll();
+    checkLoaded();
+  }, err => { console.error('gastos', err); checkLoaded(); });
+
+  onSnapshot(doc(db, "settings", "config"), snap => {
+    if (snap.exists()) {
+      config = { ...config, ...snap.data() };
+    } else {
+      setDoc(doc(db, "settings", "config"), config).catch(console.error);
     }
+    loadedFlags.config = true;
+    renderAll();
+    checkLoaded();
+  }, err => { console.error('config', err); checkLoaded(); });
+}
+
+// ── ROLE ──
+function applyRole(role) {
+  currentRole = role;
+  localStorage.setItem('sama_role', role);
+  $$('.role-switch button').forEach(b => b.classList.toggle('active', b.dataset.role === role));
+  renderAll();
+}
+
+// ── TABS ──
+function showTab(tabId) {
+  $$('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
+  $$('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  if (tabId === 'unidades') cerrarDetalleUnidad();
+}
+window.showTab = showTab;
+
+// ── HELPERS ──
+function fmtMoney(n) {
+  return '$' + Number(n||0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function getExpiryStatus(dateStr) {
+  if (!dateStr) return { class: 'badge-empty', label: 'No registrado', dias: null };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp = new Date(dateStr + 'T00:00:00');
+  const dias = Math.round((exp - today) / 86400000);
+  if (dias < 0) return { class: 'badge-exp', label: `Vencido (${Math.abs(dias)}d)`, dias };
+  if (dias <= 30) return { class: 'badge-warn', label: `Por vencer (${dias}d)`, dias };
+  return { class: 'badge-ok', label: 'Vigente', dias };
+}
+function findUnidad(id) { return unidades.find(u => u.id === id); }
+function showToast(msg) {
+  const t = $('#toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ── CLOUDINARY ──
+async function uploadFile(file, statusId) {
+  if (!file) return null;
+  const statusEl = statusId ? $('#'+statusId) : null;
+  if (statusEl) { statusEl.style.display = 'block'; statusEl.innerText = 'Subiendo...'; }
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  try {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (statusEl) statusEl.style.display = 'none';
+    if (!data.secure_url) throw new Error('Sin URL');
+    return data.secure_url;
+  } catch (err) {
+    console.error(err);
+    if (statusEl) statusEl.style.display = 'none';
+    alert('Error al subir el archivo');
+    return null;
   }
+}
 
-  // CLOUDINARY UPLOAD HELPER
-  async function uploadToCloudinary(file, statusId) {
-    if (!file) return null;
-    const statusEl = document.getElementById(statusId);
-    statusEl.style.display = 'block';
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+// ── MODAL HELPERS ──
+function openModal(id) {
+  $('#'+id).classList.add('open');
+}
+function closeModal() {
+  $$('.modal-overlay').forEach(m => m.classList.remove('open'));
+  $$('.upload-status').forEach(s => s.style.display = 'none');
+}
+window.closeModal = closeModal;
 
-    try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
-        method: 'POST',
-        body: formData
-      });
-      const data = await response.json();
-      statusEl.style.display = 'none';
-      if (data.secure_url) {
-        return data.secure_url;
-      } else {
-        throw new Error('Error al subir a Cloudinary');
-      }
-    } catch (error) {
-      console.error("Error Cloudinary:", error);
-      statusEl.style.display = 'none';
-      alert("Error al subir el archivo. Verifica tu configuración de Cloudinary.");
-      return null;
+// ── UNIDADES ──
+window.openNewUnidad = () => {
+  $('#u-id').value = '';
+  $('#form-unidad').reset();
+  $('#m-unidad-title').innerText = 'Registrar nueva unidad';
+  $('#u-delete').classList.add('hidden');
+  openModal('modal-unidad');
+};
+window.editUnidad = (id) => {
+  const u = findUnidad(id);
+  if (!u) return;
+  $('#u-id').value = u.id;
+  $('#u-eco').value = u.eco || '';
+  $('#u-placas').value = u.placas || '';
+  $('#u-modelo').value = u.modelo || '';
+  $('#u-anio').value = u.anio || '';
+  $('#u-operador').value = u.operador || '';
+  $('#u-notas').value = u.notas || '';
+  $('#m-unidad-title').innerText = 'Editar unidad';
+  $('#u-delete').classList.toggle('hidden', currentRole !== 'finanzas');
+  openModal('modal-unidad');
+};
+window.saveUnidad = async (e) => {
+  e.preventDefault();
+  const id = $('#u-id').value;
+  const data = {
+    eco: $('#u-eco').value.trim(),
+    placas: $('#u-placas').value.trim(),
+    modelo: $('#u-modelo').value.trim(),
+    anio: $('#u-anio').value ? parseInt($('#u-anio').value, 10) : null,
+    operador: $('#u-operador').value.trim(),
+    notas: $('#u-notas').value.trim()
+  };
+  try {
+    if (id) {
+      await updateDoc(doc(db, 'unidades', id), data);
+      showToast('Unidad actualizada');
+    } else {
+      data.docs = {};
+      data.docFiles = {};
+      data.createdAt = new Date().toISOString();
+      await addDoc(collection(db, 'unidades'), data);
+      showToast('Unidad creada');
     }
+    closeModal();
+  } catch (err) {
+    console.error(err);
+    alert('Error al guardar');
   }
+};
+window.deleteUnidadFromModal = async () => {
+  const id = $('#u-id').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar esta unidad? (se conservan sus gastos en el historial)')) return;
+  try {
+    await deleteDoc(doc(db, 'unidades', id));
+    closeModal();
+    if (currentUnidadId === id) cerrarDetalleUnidad();
+    showToast('Unidad eliminada');
+  } catch (err) { alert('Error al eliminar'); }
+};
 
-  // PERSISTENCIA
-  window.saveUnidad = async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('u-id').value;
-    const data = {
-      eco: document.getElementById('u-eco').value,
-      placas: document.getElementById('u-placas').value,
-      modelo: document.getElementById('u-modelo').value,
-      operador: document.getElementById('u-operador').value
-    };
-    
-    try {
-      if (id) {
-        await updateDoc(doc(db, "unidades", id), data);
-        showToast("Unidad actualizada");
-      } else {
-        data.docs = {};
-        data.docFiles = {};
-        await addDoc(collection(db, "unidades"), data);
-        showToast("Unidad registrada");
-      }
-      closeModal();
-    } catch (err) {
-      console.error(err);
-      alert("Error al guardar unidad");
-    }
-  };
-
-  window.editUnidad = (id) => {
-    const u = unidades.find(u => u.id === id);
-    document.getElementById('u-id').value = u.id;
-    document.getElementById('u-eco').value = u.eco;
-    document.getElementById('u-placas').value = u.placas;
-    document.getElementById('u-modelo').value = u.modelo;
-    document.getElementById('u-operador').value = u.operador;
-    document.getElementById('modal-unidad-title').innerText = "Editar Unidad";
-    openModal('modal-unidad');
-  };
-
-  window.deleteUnidad = async (id) => {
-    if (confirm("¿Eliminar esta unidad?")) {
-      await deleteDoc(doc(db, "unidades", id));
-      showToast("Unidad eliminada");
-    }
-  };
-
-  window.saveGasto = async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('g-id').value;
-    const file = document.getElementById('g-file').files[0];
-    
-    let fileUrl = null;
-    if (file) {
-      fileUrl = await uploadToCloudinary(file, 'g-status');
-    }
-
-    const data = {
-      unidadId: document.getElementById('g-unidad').value,
-      categoria: document.getElementById('g-cat').value,
-      monto: parseFloat(document.getElementById('g-monto').value),
-      fecha: document.getElementById('g-fecha').value,
-      desc: document.getElementById('g-desc').value
-    };
-    
-    if (fileUrl) data.fileUrl = fileUrl;
-
-    try {
-      if (id) {
-        await updateDoc(doc(db, "gastos", id), data);
-        showToast("Gasto actualizado");
-      } else {
-        data.estado = 'Pendiente';
-        await addDoc(collection(db, "gastos"), data);
-        showToast("Gasto registrado (Pendiente)");
-      }
-      closeModal();
-    } catch (err) {
-      console.error(err);
-      alert("Error al guardar gasto");
-    }
-  };
-
-  window.editGasto = (id) => {
-    const g = gastos.find(g => g.id === id);
-    document.getElementById('g-id').value = g.id;
-    document.getElementById('g-unidad').value = g.unidadId;
-    document.getElementById('g-cat').value = g.categoria;
-    document.getElementById('g-monto').value = g.monto;
-    document.getElementById('g-fecha').value = g.fecha;
-    document.getElementById('g-desc').value = g.desc;
-    document.getElementById('g-file-current').innerHTML = g.fileUrl ? `<a href="${g.fileUrl}" target="_blank" class="file-link">📄 Ver adjunto actual</a>` : '';
-    document.getElementById('modal-gasto-title').innerText = "Editar Gasto";
-    openModal('modal-gasto');
-  };
-
-  window.deleteGasto = async (id) => {
-    if (confirm("¿Eliminar este registro de gasto?")) {
-      await deleteDoc(doc(db, "gastos", id));
-      showToast("Gasto eliminado");
-    }
-  };
-
-  window.updateGastoEstado = async (id, nuevoEstado) => {
-    const comentario = prompt(`Comentario de finanzas para ${nuevoEstado}:`);
-    await updateDoc(doc(db, "gastos", id), { 
-      estado: nuevoEstado,
-      comentario: comentario || ""
-    });
-    showToast(`Gasto ${nuevoEstado}`);
-  };
-
-  window.saveDoc = async (e) => {
-    e.preventDefault();
-    const uId = document.getElementById('doc-u-id').value;
-    const type = document.getElementById('doc-type').value;
-    const fecha = document.getElementById('doc-fecha').value;
-    const file = document.getElementById('doc-file').files[0];
-    
-    let fileUrl = null;
-    if (file) {
-      fileUrl = await uploadToCloudinary(file, 'doc-status');
-    }
-
-    const u = unidades.find(u => u.id === uId);
-    const newDocs = { ...u.docs, [type]: fecha };
-    const newFiles = { ...u.docFiles, [type]: fileUrl || (u.docFiles ? u.docFiles[type] : null) };
-    
-    try {
-      await updateDoc(doc(db, "unidades", uId), { docs: newDocs, docFiles: newFiles });
-      closeModal();
-      showToast("Documento actualizado");
-    } catch (err) {
-      console.error(err);
-      alert("Error al actualizar documento");
-    }
-  };
-
-  window.addCategory = async () => {
-    const name = document.getElementById('new-cat-name').value.trim();
-    if (name && !config.categories.includes(name)) {
-      const newCats = [...config.categories, name];
-      await updateDoc(doc(db, "settings", "config"), { categories: newCats });
-      document.getElementById('new-cat-name').value = "";
-    }
-  };
-
-  window.removeCategory = async (name) => {
-    const newCats = config.categories.filter(c => c !== name);
-    await updateDoc(doc(db, "settings", "config"), { categories: newCats });
-  };
-
-  window.addDocType = async () => {
-    const name = document.getElementById('new-doc-type').value.trim();
-    if (name && !config.docTypes.includes(name)) {
-      const newDocs = [...config.docTypes, name];
-      await updateDoc(doc(db, "settings", "config"), { docTypes: newDocs });
-      document.getElementById('new-doc-type').value = "";
-    }
-  };
-
-  window.removeDocType = async (name) => {
-    const newDocs = config.docTypes.filter(d => d !== name);
-    await updateDoc(doc(db, "settings", "config"), { docTypes: newDocs });
-  };
-
-  // UI RENDERING
-  function renderUnidades() {
-    const grid = document.getElementById('unidades-grid');
-    grid.innerHTML = unidades.map(u => `
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+function renderUnidades() {
+  const grid = $('#unidades-grid');
+  if (unidades.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="ico">🚛</div>
+      <p class="msg">No hay unidades registradas</p>
+      <p class="sub">Empieza agregando tu primera unidad.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = unidades.map(u => {
+    const total = gastos.filter(g => g.unidadId === u.id && g.estado === 'Completado').reduce((s,g)=>s + (Number(g.monto)||0), 0);
+    const pendientes = gastos.filter(g => g.unidadId === u.id && g.estado === 'Pendiente').length;
+    const docVencidos = config.docTypes.filter(t => {
+      if (!u.docs || !u.docs[t]) return false;
+      return getExpiryStatus(u.docs[t]).class !== 'badge-ok';
+    }).length;
+    return `
+      <div class="unidad-card" onclick="abrirDetalleUnidad('${u.id}')">
+        <div class="head">
           <div>
-            <h3 style="margin:0; color:var(--accent);">${u.eco}</h3>
-            <p style="margin:4px 0; font-size:13px;">📍 ${u.placas}</p>
-            <p style="margin:2px 0; font-size:12px; color:var(--muted);">👤 ${u.operador || 'Sin asignar'}</p>
+            <h3 class="eco">${escapeHtml(u.eco)}</h3>
+            <p class="placas">${escapeHtml(u.placas || '')}</p>
           </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-ghost btn-sm" onclick="editUnidad('${u.id}')">✏️</button>
-            <button class="btn btn-ghost btn-sm" onclick="deleteUnidad('${u.id}')">🗑️</button>
-          </div>
+          <button class="btn-icon" onclick="event.stopPropagation();editUnidad('${u.id}')" title="Editar">✏️</button>
         </div>
+        <div class="info-row">
+          ${u.modelo ? `🏷️ ${escapeHtml(u.modelo)}` : ''}
+          ${u.anio ? `· ${u.anio}` : ''}
+        </div>
+        ${u.operador ? `<div class="info-row">👤 ${escapeHtml(u.operador)}</div>` : ''}
+        <div class="stats">
+          <div class="stat-mini"><div class="lbl">Gastado</div><div class="val">${fmtMoney(total)}</div></div>
+          <div class="stat-mini ${pendientes > 0 ? 'warn' : ''}"><div class="lbl">Pendientes</div><div class="val">${pendientes}</div></div>
+          <div class="stat-mini ${docVencidos > 0 ? 'danger' : ''}"><div class="lbl">Docs alerta</div><div class="val">${docVencidos}</div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── DETALLE UNIDAD ──
+window.abrirDetalleUnidad = (id) => {
+  currentUnidadId = id;
+  $('#unidades-list').hidden = true;
+  $('#unidad-detail').hidden = false;
+  renderUnidadDetalle(id);
+  window.scrollTo(0, 0);
+};
+window.cerrarDetalleUnidad = () => {
+  currentUnidadId = null;
+  $('#unidades-list').hidden = false;
+  $('#unidad-detail').hidden = true;
+};
+
+function renderUnidadDetalle(id) {
+  const u = findUnidad(id);
+  if (!u) { cerrarDetalleUnidad(); return; }
+
+  // populate filter selects
+  const fc = $('#detail-gastos-cat');
+  const fe = $('#detail-gastos-est');
+  if (fc) fc.innerHTML = '<option value="">Todas las categorías</option>' + config.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+  // Head
+  $('#detail-head').innerHTML = `
+    <div>
+      <h3 class="eco">${escapeHtml(u.eco)}</h3>
+      <p class="placas">${escapeHtml(u.placas || '')}</p>
+      <div class="info-line">
+        ${u.modelo ? '🏷️ '+escapeHtml(u.modelo) : ''}
+        ${u.anio ? '· '+u.anio : ''}
+        ${u.operador ? '· 👤 '+escapeHtml(u.operador) : ''}
+      </div>
+      ${u.notas ? `<div class="info-line muted">📝 ${escapeHtml(u.notas)}</div>` : ''}
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost btn-sm" onclick="editUnidad('${u.id}')">✏️ Editar</button>
+      <button class="btn btn-primary btn-sm" onclick="openNewGastoConUnidad('${u.id}')">+ Nuevo gasto</button>
+    </div>
+  `;
+
+  // Stats
+  const gastosUnidad = gastos.filter(g => g.unidadId === id);
+  const total = gastosUnidad.filter(g => g.estado === 'Completado').reduce((s,g)=>s + (Number(g.monto)||0), 0);
+  const totalAprob = gastosUnidad.filter(g => g.estado === 'Aprobado').reduce((s,g)=>s + (Number(g.monto)||0), 0);
+  const totalPend = gastosUnidad.filter(g => g.estado === 'Pendiente').reduce((s,g)=>s + (Number(g.monto)||0), 0);
+  const ahora = new Date();
+  const ymActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
+  const totalMes = gastosUnidad.filter(g => g.estado === 'Completado' && (g.fecha||'').startsWith(ymActual)).reduce((s,g)=>s + (Number(g.monto)||0), 0);
+
+  $('#detail-stats').innerHTML = `
+    <div class="stat-card accent"><div class="label">Total gastado</div><div class="value">${fmtMoney(total)}</div><div class="sub">${gastosUnidad.filter(g=>g.estado==='Completado').length} gastos completados</div></div>
+    <div class="stat-card"><div class="label">Este mes</div><div class="value">${fmtMoney(totalMes)}</div></div>
+    <div class="stat-card warn"><div class="label">Aprobado sin pagar</div><div class="value">${fmtMoney(totalAprob)}</div></div>
+    <div class="stat-card warn"><div class="label">Pendiente aprobación</div><div class="value">${fmtMoney(totalPend)}</div></div>
+  `;
+
+  // Chart - últimos 12 meses
+  renderChartMensual(id);
+
+  // Categorías
+  const catTotals = {};
+  config.categories.forEach(c => catTotals[c] = 0);
+  gastosUnidad.filter(g => g.estado === 'Completado').forEach(g => {
+    catTotals[g.categoria] = (catTotals[g.categoria] || 0) + (Number(g.monto)||0);
+  });
+  const catEl = $('#detail-categorias');
+  const cats = Object.entries(catTotals).filter(([_,v]) => v > 0);
+  if (cats.length === 0) {
+    catEl.innerHTML = '<p class="muted text-sm" style="margin:0">Aún no hay gastos completados.</p>';
+  } else {
+    catEl.innerHTML = cats.sort((a,b) => b[1]-a[1]).map(([cat, val]) => `
+      <div class="cat-pill">
+        <div class="lbl">${escapeHtml(cat)}</div>
+        <div class="val">${fmtMoney(val)}</div>
       </div>
     `).join('');
   }
 
-  function renderGastos() {
-    const tbody = document.querySelector('#gastos-table tbody');
-    tbody.innerHTML = gastos.map(g => {
-      const u = unidades.find(u => u.id === g.unidadId);
-      const statusClass = g.estado === 'Aprobado' ? 'badge-approved' : (g.estado === 'Rechazado' ? 'badge-rejected' : 'badge-pending');
-      return `
-        <tr>
-          <td>${g.fecha}</td>
-          <td><strong>${u ? u.eco : '---'}</strong></td>
-          <td><span class="badge badge-pending">${g.categoria}</span></td>
-          <td>${g.desc || '-'}</td>
-          <td style="font-weight:700; color:var(--accent);">$${g.monto.toLocaleString()}</td>
-          <td><span class="badge ${statusClass}">${g.estado}</span></td>
-          <td>${g.fileUrl ? `<a href="${g.fileUrl}" target="_blank" class="file-link">📄 Ver</a>` : '-'}</td>
-          <td>
-            <div style="display:flex; gap:5px;">
-              <button class="btn btn-wa btn-sm" onclick="shareWA('${g.id}')">📱</button>
-              <button class="btn btn-ghost btn-sm" onclick="editGasto('${g.id}')">✏️</button>
-              ${g.estado === 'Pendiente' ? `
-                <button class="btn btn-success btn-sm" onclick="updateGastoEstado('${g.id}', 'Aprobado')">✅</button>
-                <button class="btn btn-danger btn-sm" onclick="updateGastoEstado('${g.id}', 'Rechazado')">❌</button>
-              ` : ''}
-              <button class="btn btn-ghost btn-sm" onclick="deleteGasto('${g.id}')">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
+  // Documentos
+  const docsEl = $('#detail-docs');
+  docsEl.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Documento</th><th>Vence</th><th>Estado</th><th>Archivo</th><th></th></tr></thead>
+        <tbody>
+          ${config.docTypes.map(t => {
+            const fecha = u.docs ? u.docs[t] : null;
+            const fileUrl = u.docFiles ? u.docFiles[t] : null;
+            const st = getExpiryStatus(fecha);
+            return `<tr>
+              <td><strong>${escapeHtml(t)}</strong></td>
+              <td>${fecha ? fmtDate(fecha) : '<span class="muted">—</span>'}</td>
+              <td><span class="badge ${st.class}">${st.label}</span></td>
+              <td>${fileUrl ? `<a class="file-link" href="${fileUrl}" target="_blank">📄 Ver</a>` : '<span class="muted text-xs">—</span>'}</td>
+              <td class="right"><button class="btn-icon" onclick="openDocModal('${u.id}','${escapeHtml(t)}')">✏️</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 
-  function renderDocs() {
-    const grid = document.getElementById('docs-grid');
-    grid.innerHTML = unidades.map(u => `
-      <div class="card">
-        <h3 style="margin:0 0 15px; color:var(--accent); border-bottom:1px solid rgba(245,197,24,0.1); padding-bottom:8px;">${u.eco}</h3>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          ${config.docTypes.map(type => {
-            const fecha = u.docs ? u.docs[type] : null;
-            const fileUrl = u.docFiles ? u.docFiles[type] : null;
-            const status = getExpiryStatus(fecha);
+  // Gastos table (filtered)
+  const fcat = $('#detail-gastos-cat')?.value || '';
+  const fest = $('#detail-gastos-est')?.value || '';
+  let lista = gastosUnidad.slice();
+  if (fcat) lista = lista.filter(g => g.categoria === fcat);
+  if (fest) lista = lista.filter(g => g.estado === fest);
+
+  const tbl = $('#detail-gastos-table');
+  if (lista.length === 0) {
+    tbl.innerHTML = `<div class="empty-state"><div class="ico">💰</div><p class="msg">Sin gastos</p></div>`;
+  } else {
+    tbl.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            ${lista.map(g => `
+              <tr>
+                <td class="nowrap">${fmtDate(g.fecha)}</td>
+                <td><span class="badge badge-cat">${escapeHtml(g.categoria)}</span></td>
+                <td>${escapeHtml(g.desc || '—')}</td>
+                <td class="right nowrap"><strong>${fmtMoney(g.monto)}</strong></td>
+                <td><span class="badge badge-${(g.estado||'pendiente').toLowerCase()}">${escapeHtml(g.estado)}</span></td>
+                <td class="right"><button class="btn-icon" onclick="verDetalleGasto('${g.id}')">👁️</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+}
+
+function renderChartMensual(unidadId) {
+  // Last 12 months
+  const meses = [];
+  const ahora = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const label = d.toLocaleDateString('es-MX', { month: 'short' }).replace('.','');
+    meses.push({ ym, label, total: 0 });
+  }
+  gastos.filter(g => g.unidadId === unidadId && g.estado === 'Completado' && g.fecha).forEach(g => {
+    const ym = g.fecha.slice(0,7);
+    const m = meses.find(x => x.ym === ym);
+    if (m) m.total += Number(g.monto) || 0;
+  });
+  const max = Math.max(1, ...meses.map(m => m.total));
+  const el = $('#detail-chart');
+  el.innerHTML = `
+    <div class="bar-chart">
+      ${meses.map(m => {
+        const h = m.total > 0 ? Math.max(8, (m.total / max) * 140) : 4;
+        return `<div class="bar ${m.total === 0 ? 'empty' : ''}" style="height:${h}px" title="${m.ym}: ${fmtMoney(m.total)}">
+          ${m.total > 0 ? `<span class="bar-val">${m.total > 999 ? '$'+(m.total/1000).toFixed(0)+'k' : '$'+m.total.toFixed(0)}</span>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="bar-chart-labels">
+      ${meses.map(m => `<span>${m.label}</span>`).join('')}
+    </div>
+  `;
+}
+
+window.openNewGastoConUnidad = (uId) => {
+  openNewGasto();
+  $('#g-unidad').value = uId;
+};
+
+// ── GASTOS ──
+window.openNewGasto = () => {
+  $('#g-id').value = '';
+  $('#form-gasto').reset();
+  $('#g-file-current').innerHTML = '';
+  $('#m-gasto-title').innerText = 'Registrar gasto';
+  // Defaults
+  $('#g-fecha').value = new Date().toISOString().slice(0,10);
+  // Populate selects
+  $('#g-unidad').innerHTML = '<option value="">Seleccionar unidad...</option>' + unidades.map(u => `<option value="${u.id}">${escapeHtml(u.eco)} (${escapeHtml(u.placas||'')})</option>`).join('');
+  $('#g-cat').innerHTML = '<option value="">Seleccionar categoría...</option>' + config.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  openModal('modal-gasto');
+};
+window.editGasto = (id) => {
+  const g = gastos.find(x => x.id === id);
+  if (!g) return;
+  $('#g-id').value = g.id;
+  $('#m-gasto-title').innerText = 'Editar gasto';
+  // Populate selects first, then set values
+  $('#g-unidad').innerHTML = unidades.map(u => `<option value="${u.id}">${escapeHtml(u.eco)} (${escapeHtml(u.placas||'')})</option>`).join('');
+  $('#g-cat').innerHTML = config.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('#g-unidad').value = g.unidadId || '';
+  $('#g-cat').value = g.categoria || '';
+  $('#g-monto').value = g.monto || '';
+  $('#g-fecha').value = g.fecha || '';
+  $('#g-proveedor').value = g.proveedor || '';
+  $('#g-solicitante').value = g.solicitante || '';
+  $('#g-desc').value = g.desc || '';
+  $('#g-file-current').innerHTML = g.fileUrl ? `<a class="file-link" href="${g.fileUrl}" target="_blank">📄 Ver adjunto actual</a>` : '';
+  openModal('modal-gasto');
+};
+window.saveGasto = async (e) => {
+  e.preventDefault();
+  const id = $('#g-id').value;
+  const file = $('#g-file').files[0];
+  let fileUrl = null;
+  if (file) fileUrl = await uploadFile(file, 'g-status');
+
+  const data = {
+    unidadId: $('#g-unidad').value,
+    categoria: $('#g-cat').value,
+    monto: parseFloat($('#g-monto').value),
+    fecha: $('#g-fecha').value,
+    proveedor: $('#g-proveedor').value.trim(),
+    solicitante: $('#g-solicitante').value.trim(),
+    desc: $('#g-desc').value.trim()
+  };
+  if (fileUrl) data.fileUrl = fileUrl;
+
+  try {
+    if (id) {
+      await updateDoc(doc(db, 'gastos', id), data);
+      showToast('Gasto actualizado');
+    } else {
+      data.estado = 'Pendiente';
+      data.createdAt = new Date().toISOString();
+      const ref = await addDoc(collection(db, 'gastos'), data);
+      data.id = ref.id;
+      showToast('Gasto registrado (Pendiente)');
+    }
+    closeModal();
+  } catch (err) {
+    console.error(err);
+    alert('Error al guardar gasto');
+  }
+};
+window.eliminarGasto = async (id) => {
+  if (!confirm('¿Eliminar este gasto definitivamente?')) return;
+  try {
+    await deleteDoc(doc(db, 'gastos', id));
+    closeModal();
+    showToast('Gasto eliminado');
+  } catch (err) { alert('Error'); }
+};
+
+window.aprobarGasto = async (id) => {
+  const coment = prompt('Comentario de finanzas (opcional):');
+  if (coment === null) return;
+  try {
+    await updateDoc(doc(db, 'gastos', id), {
+      estado: 'Aprobado',
+      comentario: coment || '',
+      aprobadoAt: new Date().toISOString()
+    });
+    closeModal();
+    showToast('Gasto aprobado ✅');
+  } catch (err) { alert('Error'); }
+};
+window.rechazarGasto = async (id) => {
+  const motivo = prompt('Motivo del rechazo:');
+  if (motivo === null) return;
+  try {
+    await updateDoc(doc(db, 'gastos', id), {
+      estado: 'Rechazado',
+      comentario: motivo || '',
+      rechazadoAt: new Date().toISOString()
+    });
+    closeModal();
+    showToast('Gasto rechazado');
+  } catch (err) { alert('Error'); }
+};
+window.completarGasto = (id) => {
+  // open comprobante modal
+  $('#comp-id').value = id;
+  $('#form-comp').reset();
+  closeModal();
+  setTimeout(() => openModal('modal-comp'), 50);
+};
+window.saveComprobante = async (e) => {
+  e.preventDefault();
+  const id = $('#comp-id').value;
+  const file = $('#comp-file').files[0];
+  if (!file) { alert('Selecciona un archivo'); return; }
+  const url = await uploadFile(file, 'comp-status');
+  if (!url) return;
+  try {
+    await updateDoc(doc(db, 'gastos', id), {
+      estado: 'Completado',
+      comprobanteUrl: url,
+      notasComprobante: $('#comp-notas').value.trim(),
+      completadoAt: new Date().toISOString()
+    });
+    closeModal();
+    showToast('Gasto completado ✓');
+  } catch (err) { alert('Error'); }
+};
+
+window.verDetalleGasto = (id) => {
+  const g = gastos.find(x => x.id === id);
+  if (!g) return;
+  const u = findUnidad(g.unidadId);
+  $('#md-title').innerText = `Gasto · ${escapeHtml(u ? u.eco : '—')} · ${fmtMoney(g.monto)}`;
+  $('#md-body').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <span class="badge badge-${(g.estado||'pendiente').toLowerCase()}">${escapeHtml(g.estado)}</span>
+      <span class="badge badge-cat">${escapeHtml(g.categoria)}</span>
+    </div>
+    <div class="form-grid cols-2" style="margin-bottom:14px">
+      <div><div class="text-xs muted">UNIDAD</div><div><strong>${escapeHtml(u ? u.eco+' ('+u.placas+')' : '—')}</strong></div></div>
+      <div><div class="text-xs muted">FECHA</div><div>${fmtDate(g.fecha)}</div></div>
+      <div><div class="text-xs muted">MONTO</div><div><strong>${fmtMoney(g.monto)}</strong></div></div>
+      <div><div class="text-xs muted">PROVEEDOR</div><div>${escapeHtml(g.proveedor || '—')}</div></div>
+      <div><div class="text-xs muted">SOLICITANTE</div><div>${escapeHtml(g.solicitante || '—')}</div></div>
+      <div><div class="text-xs muted">REGISTRADO</div><div>${g.createdAt ? new Date(g.createdAt).toLocaleString('es-MX') : '—'}</div></div>
+    </div>
+    ${g.desc ? `<div class="alert alert-info" style="margin-bottom:10px"><div>${escapeHtml(g.desc)}</div></div>` : ''}
+    ${g.comentario ? `<div class="alert ${g.estado==='Rechazado'?'alert-warn':'alert-info'}" style="margin-bottom:10px"><div><strong>Comentario:</strong> ${escapeHtml(g.comentario)}</div></div>` : ''}
+    ${g.notasComprobante ? `<div class="alert alert-ok" style="margin-bottom:10px"><div><strong>Notas comprobante:</strong> ${escapeHtml(g.notasComprobante)}</div></div>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${g.fileUrl ? `<a class="file-link" href="${g.fileUrl}" target="_blank">📎 Adjunto inicial</a>` : ''}
+      ${g.comprobanteUrl ? `<a class="file-link" href="${g.comprobanteUrl}" target="_blank">✅ Comprobante</a>` : ''}
+    </div>
+  `;
+  // Actions based on state + role
+  let actions = '';
+  // WhatsApp always available
+  actions += `<button class="btn btn-wa" onclick="enviarWA('${g.id}')">📱 Enviar WhatsApp</button>`;
+  if (g.estado === 'Pendiente') {
+    if (currentRole === 'finanzas') {
+      actions += `<button class="btn btn-success" onclick="aprobarGasto('${g.id}')">✅ Aprobar</button>`;
+      actions += `<button class="btn btn-danger" onclick="rechazarGasto('${g.id}')">❌ Rechazar</button>`;
+    }
+    actions += `<button class="btn btn-ghost" onclick="closeModal();editGasto('${g.id}')">✏️ Editar</button>`;
+  }
+  if (g.estado === 'Aprobado') {
+    actions += `<button class="btn btn-primary" onclick="completarGasto('${g.id}')">📷 Subir comprobante y completar</button>`;
+  }
+  if (g.estado === 'Completado' && currentRole === 'finanzas') {
+    actions += `<button class="btn btn-ghost" onclick="closeModal();editGasto('${g.id}')">✏️ Editar</button>`;
+  }
+  if (currentRole === 'finanzas') {
+    actions += `<button class="btn btn-danger btn-sm" onclick="eliminarGasto('${g.id}')">🗑️ Eliminar</button>`;
+  }
+  actions += `<button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>`;
+  $('#md-actions').innerHTML = actions;
+  openModal('modal-gasto-det');
+};
+
+window.enviarWA = (id) => {
+  const g = gastos.find(x => x.id === id);
+  const u = findUnidad(g.unidadId);
+  let body;
+  if (g.estado === 'Completado') {
+    body = `✅ *COMPROBANTE — Gasto SAMA*\n\n` +
+      `🚛 Unidad: ${u ? u.eco + ' ('+u.placas+')' : '—'}\n` +
+      `📂 Categoría: ${g.categoria}\n` +
+      `📝 ${g.desc || ''}\n` +
+      `💰 Monto: ${fmtMoney(g.monto)}\n` +
+      `📅 Fecha: ${fmtDate(g.fecha)}\n` +
+      (g.proveedor ? `🏪 Proveedor: ${g.proveedor}\n` : '') +
+      (g.comprobanteUrl ? `\n📷 Comprobante: ${g.comprobanteUrl}` : '');
+  } else {
+    body = `🚛 *SOLICITUD DE GASTO — SAMA*\n\n` +
+      `🚛 Unidad: ${u ? u.eco + ' ('+u.placas+')' : '—'}\n` +
+      `📂 Categoría: ${g.categoria}\n` +
+      `📝 ${g.desc || ''}\n` +
+      `💰 Monto: ${fmtMoney(g.monto)}\n` +
+      `📅 Fecha: ${fmtDate(g.fecha)}\n` +
+      (g.proveedor ? `🏪 Proveedor: ${g.proveedor}\n` : '') +
+      (g.solicitante ? `👤 Solicita: ${g.solicitante}\n` : '') +
+      (g.fileUrl ? `\n📎 Adjunto: ${g.fileUrl}\n` : '') +
+      `\n¿Autorizado? Responde *SÍ* o *NO* 🙏`;
+  }
+  const num = (config.whatsappFinanzas || '').replace(/\D/g, '');
+  const url = num
+    ? `https://wa.me/${num}?text=${encodeURIComponent(body)}`
+    : `https://wa.me/?text=${encodeURIComponent(body)}`;
+  window.open(url, '_blank');
+};
+
+function renderGastos() {
+  // Update filter selects
+  $('#filter-unidad').innerHTML = '<option value="">Todas las unidades</option>' + unidades.map(u => `<option value="${u.id}">${escapeHtml(u.eco)}</option>`).join('');
+  $('#filter-cat').innerHTML = '<option value="">Todas las categorías</option>' + config.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+  const fU = $('#filter-unidad').value;
+  const fC = $('#filter-cat').value;
+  const fE = $('#filter-est').value;
+  const fT = ($('#filter-search').value || '').toLowerCase();
+
+  let lista = gastos.slice();
+  if (fU) lista = lista.filter(g => g.unidadId === fU);
+  if (fC) lista = lista.filter(g => g.categoria === fC);
+  if (fE) lista = lista.filter(g => g.estado === fE);
+  if (fT) lista = lista.filter(g => (
+    (g.desc||'') + ' ' + (g.proveedor||'') + ' ' + (g.solicitante||'') + ' ' +
+    (findUnidad(g.unidadId)?.eco||'') + ' ' + (findUnidad(g.unidadId)?.placas||'')
+  ).toLowerCase().includes(fT));
+
+  const cont = $('#gastos-table');
+  if (lista.length === 0) {
+    cont.innerHTML = `<div class="empty-state"><div class="ico">💰</div><p class="msg">Sin gastos</p><p class="sub">Registra el primero con el botón de arriba.</p></div>`;
+    return;
+  }
+  cont.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Unidad</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          ${lista.map(g => {
+            const u = findUnidad(g.unidadId);
             return `
-              <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px;">
-                <span style="color:var(--muted);">${type}:</span>
-                <div style="display:flex; align-items:center; gap:8px;">
-                  ${fileUrl ? `<a href="${fileUrl}" target="_blank" class="file-link">📄</a>` : ''}
-                  <span class="badge ${status.class}">${fecha || 'No reg.'}</span>
-                  <button class="btn btn-ghost btn-sm" style="padding:2px 6px;" onclick="openDocModal('${u.id}', '${type}')">✏️</button>
-                </div>
-              </div>
+              <tr>
+                <td class="nowrap">${fmtDate(g.fecha)}</td>
+                <td><strong>${escapeHtml(u ? u.eco : '—')}</strong></td>
+                <td><span class="badge badge-cat">${escapeHtml(g.categoria)}</span></td>
+                <td>${escapeHtml(g.desc || '—')}</td>
+                <td class="right nowrap"><strong>${fmtMoney(g.monto)}</strong></td>
+                <td><span class="badge badge-${(g.estado||'pendiente').toLowerCase()}">${escapeHtml(g.estado)}</span></td>
+                <td class="right"><button class="btn-icon" onclick="verDetalleGasto('${g.id}')" title="Ver detalle">👁️</button></td>
+              </tr>
             `;
           }).join('')}
-        </div>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ── DOCUMENTOS ──
+window.openDocModal = (uId, type) => {
+  const u = findUnidad(uId);
+  if (!u) return;
+  $('#doc-u-id').value = uId;
+  $('#doc-type').value = type;
+  $('#doc-fecha').value = (u.docs && u.docs[type]) ? u.docs[type] : '';
+  $('#doc-file').value = '';
+  $('#doc-file-current').innerHTML = (u.docFiles && u.docFiles[type])
+    ? `<a class="file-link" href="${u.docFiles[type]}" target="_blank">📄 Ver archivo actual</a>`
+    : '';
+  $('#m-doc-title').innerText = `${type} — ${u.eco}`;
+  $('#doc-label').innerHTML = `Vencimiento de <strong>${escapeHtml(type)}</strong> <span class="req">*</span>`;
+  openModal('modal-doc');
+};
+window.saveDoc = async (e) => {
+  e.preventDefault();
+  const uId = $('#doc-u-id').value;
+  const type = $('#doc-type').value;
+  const fecha = $('#doc-fecha').value;
+  const file = $('#doc-file').files[0];
+  let fileUrl = null;
+  if (file) fileUrl = await uploadFile(file, 'doc-status');
+  const u = findUnidad(uId);
+  if (!u) return;
+  const newDocs = { ...(u.docs || {}), [type]: fecha };
+  const newFiles = { ...(u.docFiles || {}) };
+  if (fileUrl) newFiles[type] = fileUrl;
+  try {
+    await updateDoc(doc(db, 'unidades', uId), { docs: newDocs, docFiles: newFiles });
+    closeModal();
+    showToast('Documento guardado');
+  } catch (err) { alert('Error'); }
+};
+
+function renderDocs() {
+  const grid = $('#docs-grid');
+  if (unidades.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="ico">📄</div><p class="msg">Sin unidades</p><p class="sub">Agrega unidades en la pestaña 🚛 Unidades.</p></div>`;
+    return;
+  }
+  grid.innerHTML = unidades.map(u => `
+    <div class="card">
+      <h3 style="margin:0 0 14px;font-size:16px;color:var(--accent);border-bottom:1px solid var(--border-soft);padding-bottom:8px">
+        ${escapeHtml(u.eco)} <span class="text-xs muted">${escapeHtml(u.placas||'')}</span>
+      </h3>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        ${config.docTypes.map(t => {
+          const fecha = u.docs ? u.docs[t] : null;
+          const fileUrl = u.docFiles ? u.docFiles[t] : null;
+          const st = getExpiryStatus(fecha);
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+              <div>
+                <div style="font-weight:600">${escapeHtml(t)}</div>
+                <div class="text-xs muted">${fecha ? fmtDate(fecha) : 'Sin registro'}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                ${fileUrl ? `<a class="file-link" href="${fileUrl}" target="_blank">📄</a>` : ''}
+                <span class="badge ${st.class}">${st.label}</span>
+                <button class="btn-icon" onclick="openDocModal('${u.id}','${escapeHtml(t)}')">✏️</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
       </div>
-    `).join('');
-  }
+    </div>
+  `).join('');
+}
 
-  function renderConfig() {
-    document.getElementById('config-cats').innerHTML = config.categories.map(c => `
-      <span class="badge badge-pending" style="padding: 5px 12px; border-radius: 8px;">${c} <span onclick="removeCategory('${c}')" style="margin-left:5px; cursor:pointer; opacity:0.6;">×</span></span>
-    `).join('');
-    document.getElementById('config-docs').innerHTML = config.docTypes.map(d => `
-      <span class="badge badge-pending" style="padding: 5px 12px; border-radius: 8px;">${d} <span onclick="removeDocType('${d}')" style="margin-left:5px; cursor:pointer; opacity:0.6;">×</span></span>
-    `).join('');
-  }
-
-  function updateDashboard() {
-    const aprobados = gastos.filter(g => g.estado === 'Aprobado');
-    const totalGastos = aprobados.reduce((sum, g) => sum + g.monto, 0);
-    const pend = gastos.filter(g => g.estado === 'Pendiente').length;
-    let vencidos = 0;
-    unidades.forEach(u => {
-      config.docTypes.forEach(type => {
-        if (u.docs && u.docs[type]) {
-          const status = getExpiryStatus(u.docs[type]);
-          if (status.class === 'badge-exp') vencidos++;
-        }
-      });
-    });
-
-    document.getElementById('dash-stats').innerHTML = `
-      <div class="stat-card"><div class="label">Unidades</div><div class="value">${unidades.length}</div></div>
-      <div class="stat-card"><div class="label">Gastos Aprobados</div><div class="value">$${totalGastos.toLocaleString()}</div></div>
-      <div class="stat-card"><div class="label">Pendientes</div><div class="value">${pend}</div><div class="sub">Por autorizar</div></div>
-      <div class="stat-card"><div class="label">Docs Vencidos</div><div class="value" style="color:var(--danger)">${vencidos}</div></div>
-    `;
-
-    // ── Documentos próximos a vencer / vencidos
-    const dashAlert = document.getElementById('dash-docs-alert');
-    if (dashAlert) {
-      const alerts = [];
-      unidades.forEach(u => {
-        config.docTypes.forEach(type => {
-          if (u.docs && u.docs[type]) {
-            const status = getExpiryStatus(u.docs[type]);
-            if (status.class === 'badge-warn' || status.class === 'badge-exp') {
-              alerts.push({
-                unidadId: u.id,
-                unidad: u.eco,
-                placas: u.placas,
-                type,
-                fecha: u.docs[type],
-                fileUrl: (u.docFiles && u.docFiles[type]) ? u.docFiles[type] : null,
-                status
-              });
-            }
-          }
-        });
-      });
-
-      if (alerts.length === 0) {
-        dashAlert.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:8px 0 0;">✅ Todos los documentos están vigentes.</p>';
-      } else {
-        alerts.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
-        dashAlert.innerHTML = `
-          <div class="table-wrap" style="margin-top:10px;">
-            <table>
-              <thead>
-                <tr><th>Unidad</th><th>Documento</th><th>Vence</th><th>Estado</th><th></th></tr>
-              </thead>
-              <tbody>
-                ${alerts.map(a => `
-                  <tr>
-                    <td><strong>${a.unidad}</strong> <span style="color:var(--muted); font-size:11px;">${a.placas || ''}</span></td>
-                    <td>${a.type}</td>
-                    <td>${a.fecha}</td>
-                    <td><span class="badge ${a.status.class}">${a.status.label}</span></td>
-                    <td style="text-align:right;">
-                      ${a.fileUrl ? `<a href="${a.fileUrl}" target="_blank" class="file-link" style="margin-right:6px;">📄</a>` : ''}
-                      <button class="btn btn-ghost btn-sm" onclick="openDocModal('${a.unidadId}', '${a.type}')">✏️</button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
+// ── DASHBOARD ──
+function renderDashboard() {
+  const ahora = new Date();
+  const ymActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
+  const completados = gastos.filter(g => g.estado === 'Completado');
+  const completadosMes = completados.filter(g => (g.fecha||'').startsWith(ymActual));
+  const totalMes = completadosMes.reduce((s,g)=>s + (Number(g.monto)||0), 0);
+  const totalAprobado = gastos.filter(g => g.estado === 'Aprobado').reduce((s,g)=>s + (Number(g.monto)||0), 0);
+  const pendientes = gastos.filter(g => g.estado === 'Pendiente');
+  let docsAlert = 0;
+  unidades.forEach(u => {
+    config.docTypes.forEach(t => {
+      if (u.docs && u.docs[t]) {
+        const st = getExpiryStatus(u.docs[t]);
+        if (st.class !== 'badge-ok') docsAlert++;
       }
-    }
-
-    const dashTbody = document.querySelector('#dash-gastos-table tbody');
-    dashTbody.innerHTML = aprobados.slice(0, 5).map(g => {
-      const u = unidades.find(u => u.id === g.unidadId);
-      return `<tr><td>${g.fecha}</td><td>${u ? u.eco : '---'}</td><td>${g.categoria}</td><td style="color:var(--accent); font-weight:700;">$${g.monto.toLocaleString()}</td></tr>`;
-    }).join('');
-  }
-
-  // HELPERS
-  window.showTab = (tabId) => {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    event.currentTarget.classList.add('active');
-  };
-
-  // Abre un modal sin tocar contenido del formulario (lo usa edición)
-  window.openModal = (id) => {
-    document.getElementById(id).classList.add('open');
-  };
-
-  // Inicia un nuevo registro de Unidad (limpia y abre)
-  window.openNewUnidad = () => {
-    document.getElementById('u-id').value = "";
-    document.getElementById('form-unidad').reset();
-    document.getElementById('modal-unidad-title').innerText = "Registrar Nueva Unidad";
-    openModal('modal-unidad');
-  };
-
-  // Inicia un nuevo registro de Gasto (limpia y abre)
-  window.openNewGasto = () => {
-    document.getElementById('g-id').value = "";
-    document.getElementById('form-gasto').reset();
-    document.getElementById('g-file-current').innerHTML = "";
-    document.getElementById('modal-gasto-title').innerText = "Registrar Gasto";
-    // Fecha por defecto = hoy
-    const fechaEl = document.getElementById('g-fecha');
-    if (fechaEl) fechaEl.value = new Date().toISOString().slice(0,10);
-    openModal('modal-gasto');
-  };
-
-  window.closeModal = () => {
-    const overlays = document.querySelectorAll('.modal-overlay');
-    overlays.forEach(m => {
-      m.classList.remove('open');
-      // Limpiar formularios al cerrar
-      const form = m.querySelector('form');
-      if (form) form.reset();
-      // Ocultar indicadores de subida que pudieran haber quedado visibles
-      m.querySelectorAll('.upload-status').forEach(s => s.style.display = 'none');
     });
-  };
+  });
 
-  window.openDocModal = (uId, type) => {
-    const u = unidades.find(u => u.id === uId);
-    document.getElementById('doc-u-id').value = uId;
-    document.getElementById('doc-type').value = type;
-    document.getElementById('doc-fecha').value = u.docs ? (u.docs[type] || "") : "";
-    document.getElementById('doc-file-current').innerHTML = (u.docFiles && u.docFiles[type]) ? `<a href="${u.docFiles[type]}" target="_blank" class="file-link">📄 Ver adjunto actual</a>` : '';
-    document.getElementById('doc-label').innerText = `Vencimiento de ${type}`;
-    openModal('modal-doc');
-  };
+  $('#dash-stats').innerHTML = `
+    <div class="stat-card"><div class="label">Unidades</div><div class="value">${unidades.length}</div></div>
+    <div class="stat-card accent"><div class="label">Gastado este mes</div><div class="value">${fmtMoney(totalMes)}</div><div class="sub">${completadosMes.length} gastos</div></div>
+    <div class="stat-card warn"><div class="label">Aprobado sin pagar</div><div class="value">${fmtMoney(totalAprobado)}</div></div>
+    <div class="stat-card warn"><div class="label">Pendientes aprobar</div><div class="value">${pendientes.length}</div></div>
+    <div class="stat-card danger"><div class="label">Docs en alerta</div><div class="value">${docsAlert}</div></div>
+  `;
 
-  function updateSelects() {
-    const el = document.getElementById('g-unidad');
-    if (el) el.innerHTML = '<option value="">Seleccionar unidad...</option>' + unidades.map(u => `<option value="${u.id}">${u.eco} (${u.placas})</option>`).join('');
-    const catSelect = document.getElementById('g-cat');
-    if (catSelect) catSelect.innerHTML = '<option value="">Seleccionar categoría...</option>' + config.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  // Docs alert
+  const dashAlert = $('#dash-docs-alert');
+  const alerts = [];
+  unidades.forEach(u => {
+    config.docTypes.forEach(t => {
+      if (u.docs && u.docs[t]) {
+        const st = getExpiryStatus(u.docs[t]);
+        if (st.class !== 'badge-ok') {
+          alerts.push({ unidadId: u.id, eco: u.eco, placas: u.placas, type: t, fecha: u.docs[t], fileUrl: u.docFiles?.[t], status: st });
+        }
+      }
+    });
+  });
+  if (alerts.length === 0) {
+    dashAlert.innerHTML = `<div class="alert alert-ok"><span>✅</span><div>Todos los documentos están vigentes.</div></div>`;
+  } else {
+    alerts.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+    dashAlert.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Documento</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            ${alerts.map(a => `
+              <tr>
+                <td><strong>${escapeHtml(a.eco)}</strong> <span class="text-xs muted">${escapeHtml(a.placas||'')}</span></td>
+                <td>${escapeHtml(a.type)}</td>
+                <td class="nowrap">${fmtDate(a.fecha)}</td>
+                <td><span class="badge ${a.status.class}">${a.status.label}</span></td>
+                <td class="right">
+                  ${a.fileUrl ? `<a class="file-link" href="${a.fileUrl}" target="_blank">📄</a>` : ''}
+                  <button class="btn-icon" onclick="openDocModal('${a.unidadId}','${escapeHtml(a.type)}')">✏️</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
   }
 
-  function getExpiryStatus(dateStr) {
-    if (!dateStr) return { class: '', label: 'No reg.' };
-    const today = new Date();
-    const exp = new Date(dateStr);
-    const diff = (exp - today) / (1000 * 60 * 60 * 24);
-    if (diff < 0) return { class: 'badge-exp', label: 'Vencido' };
-    if (diff < 30) return { class: 'badge-warn', label: 'Próximo' };
-    return { class: 'badge-ok', label: 'Vigente' };
+  // Pendientes (solo finanzas)
+  const pendCard = $('#dash-pendientes-card');
+  if (currentRole === 'finanzas' && pendientes.length > 0) {
+    pendCard.style.display = '';
+    $('#dash-pendientes').innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Unidad</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th></th></tr></thead>
+          <tbody>
+            ${pendientes.slice(0,8).map(g => {
+              const u = findUnidad(g.unidadId);
+              return `<tr>
+                <td class="nowrap">${fmtDate(g.fecha)}</td>
+                <td><strong>${escapeHtml(u?u.eco:'—')}</strong></td>
+                <td><span class="badge badge-cat">${escapeHtml(g.categoria)}</span></td>
+                <td>${escapeHtml(g.desc||'—')}</td>
+                <td class="right nowrap"><strong>${fmtMoney(g.monto)}</strong></td>
+                <td class="right"><button class="btn btn-success btn-sm" onclick="verDetalleGasto('${g.id}')">Revisar</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    pendCard.style.display = 'none';
   }
 
-  window.shareWA = (id) => {
-    const g = gastos.find(gas => gas.id === id);
-    const u = unidades.find(uni => uni.id === g.unidadId);
-    const text = `*GESTIÓN DE GASTO - SAMA*%0A%0A*Unidad:* ${u ? u.eco : '---'}%0A*Monto:* $${g.monto.toLocaleString()}%0A*Categoría:* ${g.categoria}%0A*Descripción:* ${g.desc}%0A*Estado:* ${g.estado}%0A%0A${g.fileUrl ? `*Adjunto:* ${g.fileUrl}` : ''}`;
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  };
-
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
+  // Recientes completados
+  const recientes = completados.slice(0,5);
+  const recEl = $('#dash-recientes');
+  if (recientes.length === 0) {
+    recEl.innerHTML = `<div class="empty-state"><div class="ico">💸</div><p class="msg">Aún no hay gastos completados</p></div>`;
+  } else {
+    recEl.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Unidad</th><th>Categoría</th><th>Monto</th><th></th></tr></thead>
+          <tbody>
+            ${recientes.map(g => {
+              const u = findUnidad(g.unidadId);
+              return `<tr>
+                <td class="nowrap">${fmtDate(g.fecha)}</td>
+                <td><strong>${escapeHtml(u?u.eco:'—')}</strong></td>
+                <td><span class="badge badge-cat">${escapeHtml(g.categoria)}</span></td>
+                <td class="right nowrap"><strong>${fmtMoney(g.monto)}</strong></td>
+                <td class="right"><button class="btn-icon" onclick="verDetalleGasto('${g.id}')">👁️</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
   }
+
+  // Tab badges
+  const bp = $('#badge-pendientes');
+  bp.innerText = pendientes.length;
+  bp.style.display = pendientes.length > 0 ? '' : 'none';
+  const bd = $('#badge-docs');
+  bd.innerText = docsAlert;
+  bd.style.display = docsAlert > 0 ? '' : 'none';
+}
+
+// ── CONFIG ──
+window.addCategory = async () => {
+  const name = $('#new-cat-name').value.trim();
+  if (!name) return;
+  if (config.categories.includes(name)) { showToast('Ya existe'); return; }
+  const next = [...config.categories, name];
+  await updateDoc(doc(db, 'settings', 'config'), { categories: next });
+  $('#new-cat-name').value = '';
+};
+window.removeCategory = async (name) => {
+  if (!confirm(`¿Eliminar categoría "${name}"? (los gastos existentes la conservan)`)) return;
+  const next = config.categories.filter(c => c !== name);
+  await updateDoc(doc(db, 'settings', 'config'), { categories: next });
+};
+window.addDocType = async () => {
+  const name = $('#new-doc-type').value.trim();
+  if (!name) return;
+  if (config.docTypes.includes(name)) { showToast('Ya existe'); return; }
+  const next = [...config.docTypes, name];
+  await updateDoc(doc(db, 'settings', 'config'), { docTypes: next });
+  $('#new-doc-type').value = '';
+};
+window.removeDocType = async (name) => {
+  if (!confirm(`¿Eliminar tipo "${name}"? (los datos existentes se conservan)`)) return;
+  const next = config.docTypes.filter(d => d !== name);
+  await updateDoc(doc(db, 'settings', 'config'), { docTypes: next });
+};
+window.saveWA = async () => {
+  const num = $('#cfg-wa').value.trim();
+  await updateDoc(doc(db, 'settings', 'config'), { whatsappFinanzas: num });
+  showToast('WhatsApp guardado');
+};
+window.resetData = async () => {
+  if (!confirm('Esto borrará TODAS las unidades, gastos y configuración. ¿Continuar?')) return;
+  if (!confirm('Última confirmación: ¿de verdad borrar todo?')) return;
+  try {
+    const [uS, gS] = await Promise.all([getDocs(collection(db, 'unidades')), getDocs(collection(db, 'gastos'))]);
+    await Promise.all([
+      ...uS.docs.map(d => deleteDoc(d.ref)),
+      ...gS.docs.map(d => deleteDoc(d.ref))
+    ]);
+    await setDoc(doc(db, 'settings', 'config'), {
+      categories: ['Refacciones','Mantenimiento','Llantas','Préstamos','Combustible'],
+      docTypes: ['Seguro','Verificación','Licencia','Permisos'],
+      whatsappFinanzas: ''
+    });
+    showToast('Datos borrados');
+  } catch (err) { alert('Error: '+err.message); }
+};
+
+function renderConfig() {
+  $('#config-cats').innerHTML = config.categories.map(c => `
+    <span class="chip">${escapeHtml(c)} <button onclick="removeCategory('${escapeHtml(c)}')" title="Eliminar">×</button></span>
+  `).join('') || '<span class="muted text-sm">Sin categorías</span>';
+  $('#config-docs').innerHTML = config.docTypes.map(d => `
+    <span class="chip">${escapeHtml(d)} <button onclick="removeDocType('${escapeHtml(d)}')" title="Eliminar">×</button></span>
+  `).join('') || '<span class="muted text-sm">Sin tipos</span>';
+  $('#cfg-wa').value = config.whatsappFinanzas || '';
+}
+
+// ── EXPORT CSV ──
+window.exportCSV = () => {
+  const headers = ['Fecha','Unidad ECO','Placas','Categoría','Descripción','Monto','Estado','Proveedor','Solicitante','Adjunto','Comprobante'];
+  const rows = gastos.map(g => {
+    const u = findUnidad(g.unidadId);
+    return [
+      g.fecha || '',
+      u?.eco || '',
+      u?.placas || '',
+      g.categoria || '',
+      g.desc || '',
+      g.monto || '',
+      g.estado || '',
+      g.proveedor || '',
+      g.solicitante || '',
+      g.fileUrl || '',
+      g.comprobanteUrl || ''
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sama-gastos-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+// ── RENDER ALL ──
+function renderAll() {
+  renderDashboard();
+  renderUnidades();
+  renderGastos();
+  renderDocs();
+  renderConfig();
+  if (currentUnidadId) renderUnidadDetalle(currentUnidadId);
+}
 </script>
 </body>
 </html>
