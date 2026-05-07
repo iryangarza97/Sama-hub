@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Flota — SAMA</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg-1: #000000;
+    --bg-2: #111111;
+    --accent: #F5C518;
+    --accent-soft: #FFD84A;
+    --text: #f5f5f5;
+    --muted: #9aa0a6;
+    --card: rgba(255,255,255,0.04);
+    --card-border: rgba(245,197,24,0.18);
+    --card-hover-border: rgba(245,197,24,0.45);
+    --danger: #e05252;
+    --success: #4caf7d;
+    --warning: #e0a030;
+    --input-bg: rgba(255,255,255,0.06);
+    --input-border: rgba(245,197,24,0.25);
+  }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: radial-gradient(900px 400px at 15% -10%, rgba(245,197,24,0.08), transparent 60%),
+                radial-gradient(900px 400px at 110% 20%, rgba(245,197,24,0.05), transparent 60%),
+                linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 24px;
+    background: rgba(0,0,0,0.7);
+    border-bottom: 1px solid rgba(245,197,24,0.15);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .topbar a { color: var(--muted); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+  .topbar a:hover { color: var(--accent); }
+  .topbar .sep { color: var(--muted); opacity: 0.4; }
+  .topbar .title { font-weight: 700; font-size: 15px; color: var(--text); }
+  .topbar .logo-mark { width: 32px; height: 32px; }
+
+  /* ── SHELL ── */
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(245,197,24,0.15);
+    border-radius: 14px; padding: 5px;
+    margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .tab-btn {
+    flex: 1; min-width: 120px;
+    padding: 10px 16px; border: none; border-radius: 10px;
+    background: transparent; color: var(--muted);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all .2s; letter-spacing: 0.3px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  .tab-btn.active { background: rgba(245,197,24,0.15); color: var(--accent); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── SECTION HEADER ── */
+  .sec-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .sec-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+  .sec-header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 10px; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: all .2s; letter-spacing: 0.3px; text-decoration: none;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: var(--accent-soft); transform: translateY(-1px); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.06); color: var(--text);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.10); }
+  .btn-danger { background: rgba(224,82,82,0.15); color: var(--danger); border: 1px solid rgba(224,82,82,0.3); }
+  .btn-danger:hover { background: rgba(224,82,82,0.25); }
+  .btn-success { background: rgba(76,175,125,0.15); color: var(--success); border: 1px solid rgba(76,175,125,0.3); }
+  .btn-success:hover { background: rgba(76,175,125,0.25); }
+  .btn-wa { background: #25D366; color: #fff; }
+  .btn-wa:hover { background: #1ebe5a; transform: translateY(-1px); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 20px;
+    margin-bottom: 14px;
+  }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+  /* ── FORMS ── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 9px; padding: 9px 12px;
+    color: var(--text); font-size: 14px;
+    outline: none; transition: border-color .2s;
+    font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent);
+  }
+  .form-group select option { background: #1a1a1a; }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 200;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #161616; border: 1px solid rgba(245,197,24,0.25);
+    border-radius: 18px; padding: 28px; width: 100%; max-width: 540px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { margin: 0 0 20px; font-size: 18px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--card-border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: rgba(245,197,24,0.08); color: var(--muted);
+    font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase;
+    padding: 11px 14px; text-align: left; font-weight: 700;
+    border-bottom: 1px solid var(--card-border);
+  }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  tbody td { padding: 11px 14px; vertical-align: middle; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  }
+  .badge-pending { background: rgba(224,160,48,0.15); color: var(--warning); border: 1px solid rgba(224,160,48,0.3); }
+  .badge-approved { background: rgba(76,175,125,0.15); color: var(--success); border: 1px solid rgba(76,175,125,0.3); }
+  .badge-rejected { background: rgba(224,82,82,0.15); color: var(--danger); border: 1px solid rgba(224,82,82,0.3); }
+  .badge-ok { background: rgba(76,175,125,0.12); color: var(--success); border: 1px solid rgba(76,175,125,0.25); }
+  .badge-warn { background: rgba(224,160,48,0.12); color: var(--warning); border: 1px solid rgba(224,160,48,0.25); }
+  .badge-exp { background: rgba(224,82,82,0.12); color: var(--danger); border: 1px solid rgba(224,82,82,0.25); }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 18px 20px;
+  }
+  .stat-card .label { font-size: 11px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; font-weight: 600; }
+  .stat-card .value { font-size: 26px; font-weight: 800; margin-top: 6px; color: var(--accent); }
+  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty p { margin: 0; font-size: 14px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #1e1e1e; border: 1px solid rgba(245,197,24,0.3);
+    border-radius: 12px; padding: 12px 22px; font-size: 14px; font-weight: 600;
+    z-index: 999; transition: transform .3s ease; white-space: nowrap;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── LOADING OVERLAY ── */
+  #loading-overlay {
+    position: fixed; inset: 0; background: var(--bg-1); z-index: 1000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 4px solid rgba(245,197,24,0.1);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .topbar { padding: 12px 16px; }
+    .shell { padding: 20px 14px 60px; }
+    .tabs { gap: 3px; }
+    .tab-btn { min-width: 80px; font-size: 12px; padding: 9px 10px; }
+    .form-grid { grid-template-columns: 1fr; }
+    table { font-size: 12px; }
+    tbody td, thead th { padding: 9px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p style="color: var(--muted); font-size: 14px;">Conectando con Firebase...</p>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <svg class="logo-mark" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gy" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#FFE266"/>
+        <stop offset="55%" stop-color="#F5C518"/>
+        <stop offset="100%" stop-color="#D9A800"/>
+      </linearGradient>
+    </defs>
+    <path d="M 38 18 A 48 48 0 1 1 22 38" fill="none" stroke="url(#gy)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 22 96 L 86 32" fill="none" stroke="url(#gy)" stroke-width="13" stroke-linecap="round"/>
+    <polygon points="98,20 98,52 66,20" fill="url(#gy)"/>
+    <path d="M 80 38 L 92 26" stroke="url(#gy)" stroke-width="13" stroke-linecap="round"/>
+  </svg>
+  <a href="index.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Hub SAMA
+  </a>
+  <span class="sep">›</span>
+  <span class="title">🚛 Gestión de Flota</span>
+</div>
+
+<div class="shell">
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button class="tab-btn" onclick="showTab('gastos')">💸 Gastos</button>
+    <button class="tab-btn" onclick="showTab('solicitudes')">📋 Solicitudes</button>
+    <button class="tab-btn" onclick="showTab('documentos')">📄 Documentos</button>
+    <button class="tab-btn" onclick="showTab('unidades')">🚛 Unidades</button>
+    <button class="tab-btn" onclick="showTab('config')">⚙️ Config</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="tab-pane active">
+    <div class="sec-header">
+      <div>
+        <h2>Dashboard</h2>
+        <p>Resumen general de la flota</p>
+      </div>
+    </div>
+    <div class="stats-row" id="dash-stats">
+      <!-- Stats via JS -->
+    </div>
+    <div class="card">
+      <h3>⚠️ Documentos próximos a vencer</h3>
+      <div id="dash-docs-alert"></div>
+    </div>
+    <div class="card">
+      <h3>💸 Últimos gastos registrados</h3>
+      <div class="table-wrap">
+        <table id="dash-gastos-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Unidad</th>
+              <th>Categoría</th>
+              <th>Monto</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GASTOS -->
+  <div id="gastos" class="tab-pane">
+    <div class="sec-header">
+      <div>
+        <h2>Registro de Gastos</h2>
+        <p>Control de refacciones, mantenimiento y otros</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-gasto')">+ Nuevo gasto</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table id="gastos-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Unidad</th>
+              <th>Categoría</th>
+              <th>Descripción</th>
+              <th>Monto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOLICITUDES -->
+  <div id="solicitudes" class="tab-pane">
+    <div class="sec-header">
+      <div>
+        <h2>Solicitudes de Gasto</h2>
+        <p>Autorización por parte de finanzas</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-solicitud')">+ Nueva solicitud</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table id="solicitudes-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Unidad</th>
+              <th>Monto</th>
+              <th>Concepto</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCUMENTOS -->
+  <div id="documentos" class="tab-pane">
+    <div class="sec-header">
+      <div>
+        <h2>Vencimiento de Documentos</h2>
+        <p>Seguimiento de vigencias por unidad</p>
+      </div>
+    </div>
+    <div id="docs-grid" class="card-grid">
+      <!-- Docs via JS -->
+    </div>
+  </div>
+
+  <!-- UNIDADES -->
+  <div id="unidades" class="tab-pane">
+    <div class="sec-header">
+      <div>
+        <h2>Unidades de Flota</h2>
+        <p>Alta y gestión de camiones</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-unidad')">+ Nueva unidad</button>
+    </div>
+    <div id="unidades-grid" class="card-grid">
+      <!-- Unidades via JS -->
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="config" class="tab-pane">
+    <div class="sec-header">
+      <h2>Configuración</h2>
+    </div>
+    <div class="card">
+      <h3>Categorías de Gasto</h3>
+      <div id="config-cats" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
+      <div class="form-actions">
+        <input type="text" id="new-cat-name" placeholder="Nueva categoría..." style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 8px; color: #fff;">
+        <button class="btn btn-primary btn-sm" onclick="addCategory()">Agregar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Tipos de Documento</h3>
+      <div id="config-docs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
+      <div class="form-actions">
+        <input type="text" id="new-doc-type" placeholder="Nuevo tipo de doc..." style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 8px; color: #fff;">
+        <button class="btn btn-primary btn-sm" onclick="addDocType()">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="modal-unidad" class="modal-overlay">
+  <div class="modal">
+    <h3>Registrar Nueva Unidad</h3>
+    <form id="form-unidad" onsubmit="saveUnidad(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Número Económico</label>
+          <input type="text" id="u-eco" required placeholder="Ej. U-01">
+        </div>
+        <div class="form-group">
+          <label>Placas</label>
+          <input type="text" id="u-placas" required placeholder="ABC-123">
+        </div>
+        <div class="form-group">
+          <label>Modelo / Año</label>
+          <input type="text" id="u-modelo" placeholder="Kenworth 2023">
+        </div>
+        <div class="form-group">
+          <label>Operador</label>
+          <input type="text" id="u-operador" placeholder="Nombre del chofer">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar Unidad</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-gasto" class="modal-overlay">
+  <div class="modal">
+    <h3>Registrar Gasto</h3>
+    <form id="form-gasto" onsubmit="saveGasto(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Unidad</label>
+          <select id="g-unidad" required></select>
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="g-cat" required></select>
+        </div>
+        <div class="form-group">
+          <label>Monto ($)</label>
+          <input type="number" id="g-monto" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="g-fecha" required>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Descripción / Detalle</label>
+        <textarea id="g-desc" placeholder="Ej. Cambio de aceite y filtros"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Registrar Gasto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-solicitud" class="modal-overlay">
+  <div class="modal">
+    <h3>Nueva Solicitud de Gasto</h3>
+    <form id="form-solicitud" onsubmit="saveSolicitud(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Unidad</label>
+          <select id="s-unidad" required></select>
+        </div>
+        <div class="form-group">
+          <label>Monto Estimado ($)</label>
+          <input type="number" id="s-monto" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Urgencia</label>
+          <select id="s-urgencia">
+            <option value="Normal">Normal</option>
+            <option value="Alta">Alta</option>
+            <option value="Crítica">Crítica</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Concepto de la solicitud</label>
+        <textarea id="s-concepto" required placeholder="Describa para qué se requiere el recurso..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Crear Solicitud</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-doc" class="modal-overlay">
+  <div class="modal">
+    <h3>Actualizar Documento</h3>
+    <form id="form-doc" onsubmit="saveDoc(event)">
+      <input type="hidden" id="doc-u-id">
+      <input type="hidden" id="doc-type">
+      <div class="form-group">
+        <label id="doc-label">Fecha de Vencimiento</label>
+        <input type="date" id="doc-fecha" required>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Actualizar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast">Mensaje guardado</div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { 
+    getFirestore, collection, addDoc, onSnapshot, query, orderBy, 
+    doc, updateDoc, deleteDoc, setDoc, getDocs 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCQGTfXLIrVOgD2aSTMFj47BI2F6JrCfHQ",
+    authDomain: "gestion-de-flota-33b4c.firebaseapp.com",
+    projectId: "gestion-de-flota-33b4c",
+    storageBucket: "gestion-de-flota-33b4c.firebasestorage.app",
+    messagingSenderId: "46827904332",
+    appId: "1:46827904332:web:6131696605fd37e36603e9"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ESTADO GLOBAL
+  let unidades = [];
+  let gastos = [];
+  let solicitudes = [];
+  let config = {
+    categories: ['Refacciones', 'Mantenimiento', 'Llantas', 'Préstamos', 'Combustible'],
+    docTypes: ['Seguro', 'Verificación', 'Licencia', 'Permisos']
+  };
+
+  // INICIALIZACIÓN
+  window.addEventListener('DOMContentLoaded', () => {
+    initRealtime();
+  });
+
+  function initRealtime() {
+    // Escuchar Unidades
+    onSnapshot(collection(db, "unidades"), (snapshot) => {
+      unidades = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderUnidades();
+      updateSelects();
+      renderDocs();
+      updateDashboard();
+      checkLoading();
+    });
+
+    // Escuchar Gastos
+    onSnapshot(query(collection(db, "gastos"), orderBy("fecha", "desc")), (snapshot) => {
+      gastos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderGastos();
+      updateDashboard();
+      checkLoading();
+    });
+
+    // Escuchar Solicitudes
+    onSnapshot(query(collection(db, "solicitudes"), orderBy("fecha", "desc")), (snapshot) => {
+      solicitudes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderSolicitudes();
+      updateDashboard();
+      checkLoading();
+    });
+
+    // Escuchar Config
+    onSnapshot(doc(db, "settings", "config"), (docSnap) => {
+      if (docSnap.exists()) {
+        config = docSnap.data();
+      } else {
+        // Crear config inicial si no existe
+        setDoc(doc(db, "settings", "config"), config);
+      }
+      renderConfig();
+      updateSelects();
+      renderDocs();
+      checkLoading();
+    });
+  }
+
+  let loadedCount = 0;
+  function checkLoading() {
+    loadedCount++;
+    if (loadedCount >= 4) {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+  }
+
+  // FUNCIONES DE PERSISTENCIA
+  window.saveUnidad = async (e) => {
+    e.preventDefault();
+    const data = {
+      eco: document.getElementById('u-eco').value,
+      placas: document.getElementById('u-placas').value,
+      modelo: document.getElementById('u-modelo').value,
+      operador: document.getElementById('u-operador').value,
+      docs: {}
+    };
+    await addDoc(collection(db, "unidades"), data);
+    closeModal();
+    showToast("Unidad registrada");
+    e.target.reset();
+  };
+
+  window.deleteUnidad = async (id) => {
+    if (confirm("¿Eliminar esta unidad? Se perderán sus datos.")) {
+      await deleteDoc(doc(db, "unidades", id));
+      showToast("Unidad eliminada");
+    }
+  };
+
+  window.saveGasto = async (e) => {
+    e.preventDefault();
+    const data = {
+      unidadId: document.getElementById('g-unidad').value,
+      categoria: document.getElementById('g-cat').value,
+      monto: parseFloat(document.getElementById('g-monto').value),
+      fecha: document.getElementById('g-fecha').value,
+      desc: document.getElementById('g-desc').value
+    };
+    await addDoc(collection(db, "gastos"), data);
+    closeModal();
+    showToast("Gasto registrado");
+    e.target.reset();
+  };
+
+  window.deleteGasto = async (id) => {
+    if (confirm("¿Eliminar este registro de gasto?")) {
+      await deleteDoc(doc(db, "gastos", id));
+      showToast("Gasto eliminado");
+    }
+  };
+
+  window.saveSolicitud = async (e) => {
+    e.preventDefault();
+    const data = {
+      unidadId: document.getElementById('s-unidad').value,
+      monto: parseFloat(document.getElementById('s-monto').value),
+      urgencia: document.getElementById('s-urgencia').value,
+      concepto: document.getElementById('s-concepto').value,
+      estado: 'Pendiente',
+      fecha: new Date().toISOString().split('T')[0]
+    };
+    await addDoc(collection(db, "solicitudes"), data);
+    closeModal();
+    showToast("Solicitud creada");
+    e.target.reset();
+  };
+
+  window.updateSolicitudEstado = async (id, nuevoEstado) => {
+    const comentario = prompt(`Comentario de finanzas para ${nuevoEstado}:`);
+    await updateDoc(doc(db, "solicitudes", id), { 
+      estado: nuevoEstado,
+      comentario: comentario || ""
+    });
+    showToast(`Solicitud ${nuevoEstado}`);
+  };
+
+  window.saveDoc = async (e) => {
+    e.preventDefault();
+    const uId = document.getElementById('doc-u-id').value;
+    const type = document.getElementById('doc-type').value;
+    const fecha = document.getElementById('doc-fecha').value;
+    
+    const u = unidades.find(u => u.id === uId);
+    const newDocs = { ...u.docs, [type]: fecha };
+    
+    await updateDoc(doc(db, "unidades", uId), { docs: newDocs });
+    closeModal();
+    showToast("Documento actualizado");
+  };
+
+  window.addCategory = async () => {
+    const name = document.getElementById('new-cat-name').value.trim();
+    if (name && !config.categories.includes(name)) {
+      const newCats = [...config.categories, name];
+      await updateDoc(doc(db, "settings", "config"), { categories: newCats });
+      document.getElementById('new-cat-name').value = "";
+    }
+  };
+
+  window.removeCategory = async (name) => {
+    const newCats = config.categories.filter(c => c !== name);
+    await updateDoc(doc(db, "settings", "config"), { categories: newCats });
+  };
+
+  window.addDocType = async () => {
+    const name = document.getElementById('new-doc-type').value.trim();
+    if (name && !config.docTypes.includes(name)) {
+      const newDocs = [...config.docTypes, name];
+      await updateDoc(doc(db, "settings", "config"), { docTypes: newDocs });
+      document.getElementById('new-doc-type').value = "";
+    }
+  };
+
+  window.removeDocType = async (name) => {
+    const newDocs = config.docTypes.filter(d => d !== name);
+    await updateDoc(doc(db, "settings", "config"), { docTypes: newDocs });
+  };
+
+  // UI RENDERING
+  function renderUnidades() {
+    const grid = document.getElementById('unidades-grid');
+    if (unidades.length === 0) {
+      grid.innerHTML = '<div class="empty"><div class="icon">🚛</div><p>No hay unidades registradas</p></div>';
+      return;
+    }
+    grid.innerHTML = unidades.map(u => `
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="margin:0; color:var(--accent);">${u.eco}</h3>
+            <p style="margin:4px 0; font-size:13px;">📍 ${u.placas}</p>
+            <p style="margin:2px 0; font-size:12px; color:var(--muted);">🚛 ${u.modelo || 'N/A'}</p>
+            <p style="margin:2px 0; font-size:12px; color:var(--muted);">👤 ${u.operador || 'Sin asignar'}</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="deleteUnidad('${u.id}')">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderGastos() {
+    const tbody = document.querySelector('#gastos-table tbody');
+    tbody.innerHTML = gastos.map(g => {
+      const u = unidades.find(u => u.id === g.unidadId);
+      return `
+        <tr>
+          <td>${g.fecha}</td>
+          <td><strong>${u ? u.eco : '---'}</strong></td>
+          <td><span class="badge badge-pending">${g.categoria}</span></td>
+          <td>${g.desc || '-'}</td>
+          <td style="font-weight:700; color:var(--accent);">$${g.monto.toLocaleString()}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="deleteGasto('${g.id}')">🗑️</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderSolicitudes() {
+    const tbody = document.querySelector('#solicitudes-table tbody');
+    tbody.innerHTML = solicitudes.map(s => {
+      const u = unidades.find(u => u.id === s.unidadId);
+      const statusClass = s.estado === 'Aprobada' ? 'badge-approved' : (s.estado === 'Rechazada' ? 'badge-rejected' : 'badge-pending');
+      return `
+        <tr>
+          <td>${s.fecha}</td>
+          <td><strong>${u ? u.eco : '---'}</strong></td>
+          <td style="font-weight:700;">$${s.monto.toLocaleString()}</td>
+          <td>${s.concepto}</td>
+          <td><span class="badge ${statusClass}">${s.estado}</span></td>
+          <td>
+            <div style="display:flex; gap:5px;">
+              <button class="btn btn-wa btn-sm" onclick="shareWA('${s.id}')">📱 WA</button>
+              ${s.estado === 'Pendiente' ? `
+                <button class="btn btn-success btn-sm" onclick="updateSolicitudEstado('${s.id}', 'Aprobada')">✅</button>
+                <button class="btn btn-danger btn-sm" onclick="updateSolicitudEstado('${s.id}', 'Rechazada')">❌</button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderDocs() {
+    const grid = document.getElementById('docs-grid');
+    grid.innerHTML = unidades.map(u => `
+      <div class="card">
+        <h3 style="margin:0 0 15px; color:var(--accent); border-bottom:1px solid rgba(245,197,24,0.1); padding-bottom:8px;">${u.eco}</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${config.docTypes.map(type => {
+            const fecha = u.docs ? u.docs[type] : null;
+            const status = getExpiryStatus(fecha);
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+                <span style="color:var(--muted);">${type}:</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="badge ${status.class}">${fecha || 'No reg.'}</span>
+                  <button class="btn btn-ghost btn-sm" style="padding:2px 6px;" onclick="openDocModal('${u.id}', '${type}')">✏️</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderConfig() {
+    document.getElementById('config-cats').innerHTML = config.categories.map(c => `
+      <span class="chip active">${c} <span onclick="removeCategory('${c}')" style="margin-left:5px; opacity:0.5;">×</span></span>
+    `).join('');
+    document.getElementById('config-docs').innerHTML = config.docTypes.map(d => `
+      <span class="chip active">${d} <span onclick="removeDocType('${d}')" style="margin-left:5px; opacity:0.5;">×</span></span>
+    `).join('');
+  }
+
+  function updateDashboard() {
+    const totalGastos = gastos.reduce((sum, g) => sum + g.monto, 0);
+    const pend = solicitudes.filter(s => s.estado === 'Pendiente').length;
+    
+    let vencidos = 0;
+    unidades.forEach(u => {
+      config.docTypes.forEach(type => {
+        if (u.docs && u.docs[type]) {
+          const status = getExpiryStatus(u.docs[type]);
+          if (status.class === 'badge-exp') vencidos++;
+        }
+      });
+    });
+
+    document.getElementById('dash-stats').innerHTML = `
+      <div class="stat-card"><div class="label">Unidades</div><div class="value">${unidades.length}</div></div>
+      <div class="stat-card"><div class="label">Gastos Totales</div><div class="value">$${totalGastos.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="label">Solicitudes</div><div class="value">${pend}</div><div class="sub">Pendientes</div></div>
+      <div class="stat-card"><div class="label">Docs Vencidos</div><div class="value" style="color:var(--danger)">${vencidos}</div></div>
+    `;
+
+    // Tabla dashboard
+    const dashTbody = document.querySelector('#dash-gastos-table tbody');
+    dashTbody.innerHTML = gastos.slice(0, 5).map(g => {
+      const u = unidades.find(u => u.id === g.unidadId);
+      return `<tr><td>${g.fecha}</td><td>${u ? u.eco : '---'}</td><td>${g.categoria}</td><td style="color:var(--accent); font-weight:700;">$${g.monto}</td></tr>`;
+    }).join('');
+  }
+
+  // HELPERS
+  window.showTab = (tabId) => {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+  };
+
+  window.openModal = (id) => document.getElementById(id).classList.add('open');
+  window.closeModal = () => document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+
+  window.openDocModal = (uId, type) => {
+    document.getElementById('doc-u-id').value = uId;
+    document.getElementById('doc-type').value = type;
+    document.getElementById('doc-label').innerText = `Vencimiento de ${type}`;
+    openModal('modal-doc');
+  };
+
+  function updateSelects() {
+    const uSelects = ['g-unidad', 's-unidad'];
+    uSelects.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '<option value="">Seleccionar unidad...</option>' + 
+          unidades.map(u => `<option value="${u.id}">${u.eco} (${u.placas})</option>`).join('');
+      }
+    });
+
+    const catSelect = document.getElementById('g-cat');
+    if (catSelect) {
+      catSelect.innerHTML = '<option value="">Seleccionar categoría...</option>' + 
+        config.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+  }
+
+  function getExpiryStatus(dateStr) {
+    if (!dateStr) return { class: '', label: 'No reg.' };
+    const today = new Date();
+    const exp = new Date(dateStr);
+    const diff = (exp - today) / (1000 * 60 * 60 * 24);
+    if (diff < 0) return { class: 'badge-exp', label: 'Vencido' };
+    if (diff < 30) return { class: 'badge-warn', label: 'Próximo' };
+    return { class: 'badge-ok', label: 'Vigente' };
+  }
+
+  window.shareWA = (id) => {
+    const s = solicitudes.find(sol => sol.id === id);
+    const u = unidades.find(uni => uni.id === s.unidadId);
+    const text = `*SOLICITUD DE GASTO - SAMA*%0A%0A` +
+                 `*Unidad:* ${u ? u.eco : '---'}%0A` +
+                 `*Monto:* $${s.monto.toLocaleString()}%0A` +
+                 `*Concepto:* ${s.concepto}%0A` +
+                 `*Urgencia:* ${s.urgencia}%0A%0A` +
+                 `Favor de revisar y autorizar en el Hub SAMA.`;
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+
+</body>
+</html>
